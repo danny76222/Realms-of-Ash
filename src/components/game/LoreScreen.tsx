@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Icon } from "./icons";
 import { useGame } from "@/game/store";
 import { FACTIONS, FACTION_IDS, LOCATIONS, NPCS } from "@/game/world";
 import { FACTION_LORE, LORE_TERMS, REALM_HISTORY, USURPER_RISE } from "@/game/lore";
@@ -18,7 +19,9 @@ const TABS: { id: Tab; label: string; hint: string }[] = [
 function Entry({ year, title, text }: { year: string; title: string; text: string }) {
   return (
     <li className="relative border-l-2 border-accent/70 pl-3">
-      <span className="pixel-font block text-[9px] uppercase tracking-wide text-accent">{year}</span>
+      <span className="pixel-font block text-[9px] uppercase tracking-wide text-accent">
+        {year}
+      </span>
       <span className="heading-font block text-[11px] text-primary">{title}</span>
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{text}</p>
     </li>
@@ -37,12 +40,21 @@ export function LoreScreen() {
         <Panel
           title="Chronicle of the Realm"
           right={
-            <PixelButton size="sm" variant="ghost" onClick={() => setScreen(game ? "map" : "title")}>
+            <PixelButton
+              size="sm"
+              variant="ghost"
+              onClick={() => setScreen(game ? "map" : "title")}
+            >
               {game ? "Back to the map" : "Back to title"}
             </PixelButton>
           }
         >
-          <SceneArt src={art} alt="A painted scene from the realm's history" height="h-28 sm:h-36" className="mb-3" />
+          <SceneArt
+            src={art}
+            alt="A painted scene from the realm's history"
+            height="h-28 sm:h-36"
+            className="mb-3"
+          />
 
           <nav className="mb-3 flex flex-wrap gap-1">
             {TABS.map((t) => (
@@ -57,7 +69,9 @@ export function LoreScreen() {
               </PixelButton>
             ))}
           </nav>
-          <p className="mb-3 text-xs italic text-muted-foreground">{TABS.find((t) => t.id === tab)?.hint}</p>
+          <p className="mb-3 text-xs italic text-muted-foreground">
+            {TABS.find((t) => t.id === tab)?.hint}
+          </p>
 
           {tab === "history" ? (
             <ul className="space-y-3">
@@ -70,9 +84,16 @@ export function LoreScreen() {
           {tab === "usurper" ? (
             <div className="grid gap-3 md:grid-cols-[auto_1fr]">
               <div className="flex flex-col items-center gap-1">
-                <Portrait src={NPC_ART["lord_draeven"]} glyph="👺" alt="Corvus Draeven" size="h-28 w-24" />
+                <Portrait
+                  src={NPC_ART["lord_draeven"]}
+                  glyph="device-4"
+                  alt="Corvus Draeven"
+                  size="h-28 w-24"
+                />
                 <span className="heading-font text-[10px] text-primary">Corvus Draeven</span>
-                <span className="pixel-font text-[8px] text-muted-foreground">Hammer of the Iron Pact</span>
+                <span className="pixel-font text-[8px] text-muted-foreground">
+                  Hammer of the Iron Pact
+                </span>
               </div>
               <ul className="space-y-3">
                 {USURPER_RISE.map((e) => (
@@ -92,13 +113,19 @@ export function LoreScreen() {
                 return (
                   <article key={id} className="ornate surface-stone bg-background/40 p-2">
                     <header className="mb-2 flex items-center gap-2">
-                      <Portrait src={lord ? NPC_ART[lord.id] : undefined} glyph={f.banner} alt={lord?.name ?? f.name} size="h-14 w-14" />
+                      <Portrait
+                        src={lord ? NPC_ART[lord.id] : undefined}
+                        glyph={f.banner}
+                        alt={lord?.name ?? f.name}
+                        size="h-14 w-14"
+                      />
                       <div className="min-w-0">
                         <h3 className="heading-font text-[11px]" style={{ color: f.color }}>
                           {f.name} · {f.house}
                         </h3>
                         <p className="pixel-font text-[8px] text-muted-foreground">
-                          {lord?.name ?? "—"} · seat: {LOCATIONS[f.capital]?.name ?? "—"}
+                          {lord?.name ?? "unknown"} · seat:{" "}
+                          {LOCATIONS[f.capital]?.name ?? "unknown"}
                         </p>
                         <p className="text-xs italic text-muted-foreground">{l.motto}</p>
                       </div>
@@ -119,23 +146,33 @@ export function LoreScreen() {
                     </div>
                     <dl className="space-y-1 text-sm">
                       <div>
-                        <dt className="pixel-font inline text-[8px] uppercase text-primary">Goal · </dt>
+                        <dt className="pixel-font inline text-[8px] uppercase text-primary">
+                          Goal ·{" "}
+                        </dt>
                         <dd className="inline text-muted-foreground">{l.goal}</dd>
                       </div>
                       <div>
-                        <dt className="pixel-font inline text-[8px] uppercase text-primary">Wants from you · </dt>
+                        <dt className="pixel-font inline text-[8px] uppercase text-primary">
+                          Wants from you ·{" "}
+                        </dt>
                         <dd className="inline text-muted-foreground">{l.wants}</dd>
                       </div>
                       <div>
-                        <dt className="pixel-font inline text-[8px] uppercase text-primary">Fears · </dt>
+                        <dt className="pixel-font inline text-[8px] uppercase text-primary">
+                          Fears ·{" "}
+                        </dt>
                         <dd className="inline text-muted-foreground">{l.fears}</dd>
                       </div>
                       <div>
-                        <dt className="pixel-font inline text-[8px] uppercase text-accent">In the war · </dt>
+                        <dt className="pixel-font inline text-[8px] uppercase text-accent">
+                          In the war ·{" "}
+                        </dt>
                         <dd className="inline text-muted-foreground">{l.stance}</dd>
                       </div>
                       <div>
-                        <dt className="pixel-font inline text-[8px] uppercase text-destructive">Faultline · </dt>
+                        <dt className="pixel-font inline text-[8px] uppercase text-destructive">
+                          Faultline ·{" "}
+                        </dt>
                         <dd className="inline text-muted-foreground">{l.faultline}</dd>
                       </div>
                     </dl>
@@ -162,7 +199,8 @@ export function LoreScreen() {
           ) : null}
 
           <p className="pixel-font mt-4 text-[8px] text-muted-foreground">
-            {GLYPH.quests} Chronicles are written by survivors, who are rarely impartial.
+            <Icon name={GLYPH.quests} /> Chronicles are written by survivors, who are rarely
+            impartial.
           </p>
         </Panel>
       </div>

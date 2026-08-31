@@ -54,7 +54,7 @@ function tick() {
   if (!ctx || !enabled) return;
   const bar = step % 8;
 
-  // Drone every other bar — open fifth, like a hurdy-gurdy.
+  // Drone every other bar: open fifth, like a hurdy-gurdy.
   if (bar % 4 === 0) {
     note(ROOT / 2, 3.4, 0.05, "sawtooth");
     note((ROOT / 2) * Math.pow(2, 7 / 12), 3.4, 0.035, "sawtooth");

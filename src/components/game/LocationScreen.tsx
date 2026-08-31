@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Icon } from "./icons";
 import { CLASSES, ITEMS, SKILLS } from "@/game/data";
 import {
   addItem,
@@ -178,7 +179,7 @@ export function LocationScreen() {
               spouse?.name ?? "they"
             } takes your hand. ${
               house
-                ? `${house.name} now counts your fate with theirs — their friends will call on you, and so will their enemies.`
+                ? `${house.name} now counts your fate with theirs. Their friends will call on you, and so will their enemies.`
                 : "Whatever comes for them now comes for you as well."
             }`}
             typewriter={settings.typewriter}
@@ -206,7 +207,7 @@ export function LocationScreen() {
         ) : null}
 
         <Panel
-          title={`${loc.name} — ${KIND_LABEL[loc.kind]}${faction ? ` of ${faction.name}` : ""}`}
+          title={`${loc.name}, ${KIND_LABEL[loc.kind]}${faction ? ` of ${faction.name}` : ""}`}
           right={
             <PixelButton size="sm" variant="ghost" onClick={() => setScreen("map")}>
               Travel
@@ -229,7 +230,7 @@ export function LocationScreen() {
             {ambientLine(loc.kind, game.day + game.locationId.length)}
           </p>
           <p className="pixel-font mt-1 text-[9px] uppercase text-muted-foreground">
-            {weatherOf(game).glyph} {weatherOf(game).name} · {timeOf(game).label}
+            <Icon name={weatherOf(game).glyph} /> {weatherOf(game).name} · {timeOf(game).label}
           </p>
           <p className="mt-1 text-sm italic text-muted-foreground">{weatherOf(game).line}</p>
           <div className="mt-3 flex flex-wrap gap-1">
@@ -286,7 +287,7 @@ export function LocationScreen() {
         </Panel>
 
         {run ? (
-          <Panel title={`In the Depths — ${loc.name}`}>
+          <Panel title={`In the Depths: ${loc.name}`}>
             {settings.sceneArt && look.src ? (
               <SceneArt
                 src={look.src}
@@ -417,7 +418,7 @@ export function LocationScreen() {
                         <div className="mt-2">
                           <Meter
                             value={Math.max(0, st.affinity)}
-                            label={`Regard ${st.affinity} — ${regardTier(st.affinity)}`}
+                            label={`Regard ${st.affinity}, ${regardTier(st.affinity)}`}
                           />
                         </div>
 
@@ -483,7 +484,7 @@ export function LocationScreen() {
                         {courting ? (
                           <p className="mt-1 text-sm text-muted-foreground">
                             A match here would bind you to{" "}
-                            {npc.faction ? FACTIONS[npc.faction].name : "their house"} — their wars
+                            {npc.faction ? FACTIONS[npc.faction].name : "their house"}, their wars
                             would become yours.
                           </p>
                         ) : null}
@@ -540,7 +541,7 @@ export function LocationScreen() {
                   className="flex flex-wrap items-center gap-2 border border-border bg-background/40 px-2 py-1.5"
                 >
                   <span className="min-w-0 flex-1 text-sm">
-                    {q.name} — target {LOCATIONS[q.target]?.name}
+                    {q.name}, target {LOCATIONS[q.target]?.name}
                     {q.kind === "escort"
                       ? ` (${game.quests[q.id]?.progress ?? 0}/${q.need} legs)`
                       : ""}
@@ -576,7 +577,7 @@ export function LocationScreen() {
                       disabled={game.gold < item.price}
                       onClick={() => update((g) => buyItem(g, id))}
                     >
-                      {item.price}🪙
+                      {item.price} gold
                     </PixelButton>
                   </li>
                 );
@@ -598,7 +599,9 @@ export function LocationScreen() {
                   >
                     <span className="min-w-0 flex-1 text-sm">
                       <span className="pixel-font text-[10px] text-primary">
-                        {cls.sprite} {cls.name}
+                        <>
+                          <Icon name={cls.sprite} /> {cls.name}
+                        </>
                       </span>
                       <span className="block text-muted-foreground">
                         {cls.blurb} Knows {SKILLS[cls.startSkill]?.name}.
@@ -611,7 +614,7 @@ export function LocationScreen() {
                         update((g) => hireRecruit(g, cid, cost, Math.max(1, heroLevel - 1)))
                       }
                     >
-                      {cost}🪙
+                      {cost} gold
                     </PixelButton>
                   </li>
                 );

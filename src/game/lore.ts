@@ -31,7 +31,7 @@ export const REALM_HISTORY: LoreEntry[] = [
   {
     year: "AR 38",
     title: "The Winter of Bad Grain",
-    text: "Two harvests failed. Villages emptied westward. The roads filled with people who had been farmers in autumn and were bandits by spring — a problem no house has yet solved, and several quietly profit from.",
+    text: "Two harvests failed. Villages emptied westward. The roads filled with people who had been farmers in autumn and were bandits by spring: a problem no house has yet solved, and several quietly profit from.",
   },
   {
     year: "AR 41",
@@ -39,13 +39,13 @@ export const REALM_HISTORY: LoreEntry[] = [
     text: "The houses met at Cassock Town to appoint a regent and restore a crown. Twelve days of argument produced one signed document: the bill for the food. Corvus Draeven attended, said almost nothing, and left with a list of everyone's weaknesses.",
   },
   {
-    year: "AR 42 — now",
+    year: "AR 42 (now)",
     title: "Ashes on the Road",
     text: "Villages burn on the Oakhollow road and no lord claims the torches. Companies of masterless soldiers ride under an ash-grey banner. And you arrive in the middle of it with a sword, a name, and no particular plan.",
   },
 ];
 
-/** How the usurper got where he is — a deliberately unflattering account. */
+/** How the usurper got where he is: a deliberately unflattering account. */
 export const USURPER_RISE: LoreEntry[] = [
   {
     year: "The Pit-Captain",
@@ -75,7 +75,7 @@ export const USURPER_RISE: LoreEntry[] = [
   {
     year: "The Fires",
     title: "The proof he needs",
-    text: "Burnt villages make his argument for him. Whether he orders the torches, tolerates them, or merely arrives afterwards with grain and soldiers is the question the whole campaign turns on — and the one you will be asked to answer.",
+    text: "Burnt villages make his argument for him. Whether he orders the torches, tolerates them, or merely arrives afterwards with grain and soldiers is the question the whole campaign turns on, and the one you will be asked to answer.",
   },
 ];
 
@@ -115,7 +115,7 @@ export const FACTION_LORE: Record<FactionId, FactionLore> = {
     ],
     faultline:
       "Aldric wants proof before he moves; Seren thinks proof arrives after the war, not before it. Whichever of them you convince, the other remembers.",
-    goal: "Restore a lawful crown — even a weak one — before the charter collapses entirely.",
+    goal: "Restore a lawful crown, even a weak one, before the charter collapses entirely.",
     wants: "Proof. Witnesses, ledgers, sealed confessions. Aldric Corvane will not move on rumour, however loudly the roads burn.",
     fears: "That the realm decides legitimacy is a luxury and hands the crown to whoever feeds it.",
     stance: "The loyalist claim. Backing Ravensfell means coalition-building, slow diplomacy, and asking five proud houses to take orders.",
@@ -125,7 +125,7 @@ export const FACTION_LORE: Record<FactionId, FactionLore> = {
     history:
       "House Vantry started as toll-farmers and ended up owning the tolls, the roads, and most of the people who complain about both. They have never lost a war, having never fought one.",
     lineage:
-      "House Vantry are toll-farmers who married upward four times in eighty years and never once fought for a title they could purchase. Hollis is the third Vantry to run the counting-house and the first to inherit it without a lawsuit — his elder sister Ottiline signed away her claim for a river and two ports, and is still ahead on the deal.",
+      "House Vantry are toll-farmers who married upward four times in eighty years and never once fought for a title they could purchase. Hollis is the third Vantry to run the counting-house and the first to inherit it without a lawsuit; his elder sister Ottiline signed away her claim for a river and two ports, and is still ahead on the deal.",
     court: [
       { name: "Ottiline Vantry", role: "Mistress of the River Ports", note: "Holds the northern trade on her own account. Sells to whoever Hollis refuses, out of habit." },
       { name: "Factor Meech", role: "Chief of the Ledger", note: "Owns copies of every debt in the realm. Has never taken a side and has never been on the losing one." },
@@ -135,7 +135,7 @@ export const FACTION_LORE: Record<FactionId, FactionLore> = {
       "Hollis wants a crown in his debt; the Caravan Masters want the roads open this month. A long war serves one and ruins the other.",
     goal: "Keep the trade routes open and end up creditor to whoever wins.",
     wants: "Returns. Hollis Vantry pays generously for stability, escorted caravans, and information before anyone else has it.",
-    fears: "A victor with no debts — a crown that owes Goldmere nothing has no reason to listen to it.",
+    fears: "A victor with no debts: a crown that owes Goldmere nothing has no reason to listen to it.",
     stance: "Funds both sides. Goldmere gold can arm a coalition overnight, or bankroll a usurper who promises better terms.",
   },
   ironpact: {
@@ -143,7 +143,7 @@ export const FACTION_LORE: Record<FactionId, FactionLore> = {
     history:
       "Mining oath-brotherhoods who swore to each other before they ever swore to a crown. Wealth from the deep seams turned pit-crews into companies and companies into the only year-round army in the realm.",
     lineage:
-      "The Pact has no lineage and says so loudly — oath-brotherhoods elect their captains and bury them without monuments. Corvus Draeven is the first man to hold all seven brotherhoods at once, and he did it by paying off their debts, not by winning a vote. His son died in the Hollow Mine collapse of AR 36. He has never named another heir, which is either humility or a threat.",
+      "The Pact has no lineage and says so loudly: oath-brotherhoods elect their captains and bury them without monuments. Corvus Draeven is the first man to hold all seven brotherhoods at once, and he did it by paying off their debts, not by winning a vote. His son died in the Hollow Mine collapse of AR 36. He has never named another heir, which is either humility or a threat.",
     court: [
       { name: "Captain Maud Kell", role: "Commander, Ash Company", note: "The army's real owner. Follows Draeven's plan, not his person, and has said so to his face." },
       { name: "The Fen Widow", role: "Whatever is required", note: "Answers to Draeven alone. The brotherhoods pretend she is a rumour." },
@@ -153,7 +153,7 @@ export const FACTION_LORE: Record<FactionId, FactionLore> = {
       "Draeven wants a throne by consent; Maud and the Widow have different ideas about what to do when consent runs short. That gap is where the burnt villages sit.",
     goal: "Sweep away the charter and put Corvus Draeven on a rebuilt throne, by consent if possible.",
     wants: "Competence and quiet. Draeven rewards people who solve problems and does not ask how.",
-    fears: "That the fires are traced to his hand before he is crowned — his whole claim rests on being the cure, not the disease.",
+    fears: "That the fires are traced to his hand before he is crowned; his whole claim rests on being the cure, not the disease.",
     stance: "The usurper's power base. Siding with the Pact is fast, well-paid and genuinely effective, and costs you the people who trusted you.",
   },
   sunmarch: {
@@ -168,8 +168,8 @@ export const FACTION_LORE: Record<FactionId, FactionLore> = {
       { name: "The Vineyard Houses", role: "Six lesser families", note: "Pay for the horses. Increasingly loud about what they are getting for it." },
     ],
     faultline:
-      "Verity will not ride until the cause flatters Sunmarch; Perrin would ride tomorrow. Court every duel and oath and the house follows — press it and Ottoline finds you unforgivably rude.",
-    goal: "Be recognised as first among the houses — and let a crown happen around that fact.",
+      "Verity will not ride until the cause flatters Sunmarch; Perrin would ride tomorrow. Court every duel and oath and the house follows; press it and Ottoline finds you unforgivably rude.",
+    goal: "Be recognised as first among the houses, and let a crown happen around that fact.",
     wants: "Honour observed. Lady Aleyne notices duels answered, oaths kept and insults returned promptly.",
     fears: "Irrelevance. Being remembered as the house that had the best cavalry and never used it.",
     stance: "The swing vote. Sunmarch riders can break a field, but only for a cause that flatters them.",
@@ -186,10 +186,10 @@ export const FACTION_LORE: Record<FactionId, FactionLore> = {
       { name: "The Charcoal Petition", role: "A standing grievance", note: "Three clans already sell to Iron Pact forges. Brannoc pretends not to know their names." },
     ],
     faultline:
-      "Brannoc's truce holds only while nobody makes the clans choose. Rally Thornwold and you gain the finest archers alive — and you make them choose.",
+      "Brannoc's truce holds only while nobody makes the clans choose. Rally Thornwold and you gain the finest archers alive. And you make them choose.",
     goal: "Keep the woods unowned, untaxed and unrecorded by anyone's clerk.",
     wants: "To be left alone, and failing that, to be asked properly. Favours to individual clans matter more than treaties.",
-    fears: "Iron Pact charcoal crews and Goldmere surveyors — both of which arrive with paperwork and leave with the forest.",
+    fears: "Iron Pact charcoal crews and Goldmere surveyors, both of which arrive with paperwork and leave with the forest.",
     stance: "Reluctant allies, ferocious defenders. Rally them and you gain the best skirmishers alive; press them and they simply vanish.",
   },
   freeholds: {
@@ -206,9 +206,9 @@ export const FACTION_LORE: Record<FactionId, FactionLore> = {
     faultline:
       "Ilsa's arbitration keeps the Holds neutral and undefended; the Levy Faction wants them armed and therefore worth conquering. Your help decides which argument wins.",
     goal: "Survive the war with their charters intact and, if the realm fractures, become something new.",
-    wants: "Practical help — safe roads, cleared bandit camps, honest arbitration — and no promises they can't audit.",
+    wants: "Practical help (safe roads, cleared bandit camps, honest arbitration) and no promises they can't audit.",
     fears: "Any strong crown at all. Winners tend to notice how rich Cassock Town is.",
-    stance: "The independence path. With the Holds behind you, the realm need not be united at all — only free of its lords.",
+    stance: "The independence path. With the Holds behind you, the realm need not be united at all, only free of its lords.",
   },
 };
 

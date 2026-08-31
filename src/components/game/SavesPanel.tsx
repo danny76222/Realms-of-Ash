@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
+import { Icon } from "./icons";
 import { supabase } from "@/integrations/supabase/client";
 import { deleteSave, listSaves, writeSave } from "@/lib/saves.functions";
-import { localDelete, localSaves, localWrite, metaOf, migrate, SLOTS, type SaveMeta } from "@/game/saves";
+import {
+  localDelete,
+  localSaves,
+  localWrite,
+  metaOf,
+  migrate,
+  SLOTS,
+  type SaveMeta,
+} from "@/game/saves";
 import { LOCATIONS } from "@/game/world";
 import type { GameState } from "@/game/types";
 import { Panel, PixelButton } from "./ui";
@@ -62,7 +71,7 @@ export function SavesPanel({
   const save = async (slot: number) => {
     if (!current) return;
     setBusy(true);
-    const name = `${current.heroName} — Day ${current.day}`;
+    const name = `${current.heroName}, Day ${current.day}`;
     localWrite(slot, name, current);
     if (signedIn) {
       try {
@@ -124,20 +133,26 @@ export function SavesPanel({
     >
       <p className="mb-2 text-sm text-muted-foreground">
         {signedIn
-          ? "Signed in — saves are stored in the cloud and mirrored on this device."
+          ? "Signed in. Saves are stored in the cloud and mirrored on this device."
           : "Playing as a guest: saves stay on this device. Sign in to keep them in the cloud."}
       </p>
       <ul className="space-y-1">
         {SLOTS.map((slot) => {
           const row = rows.find((r) => r.slot === slot);
           return (
-            <li key={slot} className="flex flex-wrap items-center gap-2 border border-border bg-background/50 px-2 py-1.5">
+            <li
+              key={slot}
+              className="flex flex-wrap items-center gap-2 border border-border bg-background/50 px-2 py-1.5"
+            >
               <span className="pixel-font w-14 text-[10px] text-primary">Slot {slot + 1}</span>
               <span className="min-w-0 flex-1 truncate text-sm">
                 {row ? (
                   <>
-                    {row.heroName}, level {row.level} — day {row.day}, {LOCATIONS[row.locationId]?.name ?? row.locationId}
-                    {row.cloud ? " ☁" : ""}
+                    {row.heroName}, level {row.level}, day {row.day},{" "}
+                    {LOCATIONS[row.locationId]?.name ?? row.locationId}
+                    {row.cloud ? (
+                      <Icon name="cloud-save" className="ml-1" title="Saved to the cloud" />
+                    ) : null}
                   </>
                 ) : (
                   <span className="text-muted-foreground">empty</span>
@@ -155,7 +170,12 @@ export function SavesPanel({
                   </PixelButton>
                 ) : null}
                 {row ? (
-                  <PixelButton size="sm" variant="danger" onClick={() => void remove(slot)} disabled={busy}>
+                  <PixelButton
+                    size="sm"
+                    variant="danger"
+                    onClick={() => void remove(slot)}
+                    disabled={busy}
+                  >
                     Delete
                   </PixelButton>
                 ) : null}

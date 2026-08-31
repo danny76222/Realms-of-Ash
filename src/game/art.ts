@@ -192,19 +192,19 @@ export const BEAT_ART: Record<string, string> = {
 
 /** Thematic glyphs used instead of generic UI icons. */
 export const GLYPH = {
-  map: "🗺",
-  party: "🛡",
-  quests: "📜",
-  save: "💾",
-  settings: "⚙",
-  menu: "⚔",
-  realm: "👑",
-  rest: "🔥",
-  travel: "🐎",
-  gold: "🪙",
-  day: "🌒",
-  renown: "📯",
-  place: "📍",
+  map: "map",
+  party: "party",
+  quests: "quests",
+  save: "save",
+  settings: "settings",
+  menu: "menu",
+  realm: "realm",
+  rest: "rest",
+  travel: "travel",
+  gold: "gold",
+  day: "day",
+  renown: "renown",
+  place: "place",
 };
 
 const AMBIENT: Record<string, string[]> = {
@@ -216,7 +216,7 @@ const AMBIENT: Record<string, string[]> = {
   castle: [
     "Boot-heels on flagstone. Somewhere above, a door closes with authority.",
     "Banners breathe in the draught. The guards weigh your worth in one glance.",
-    "Wax, iron and old wine — the smell of decisions being made without you.",
+    "Wax, iron and old wine: the smell of decisions being made without you.",
   ],
   dungeon: [
     "The dark goes down further than the torchlight is willing to follow.",

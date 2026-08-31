@@ -17,13 +17,13 @@ import { LoreScreen } from "@/components/game/LoreScreen";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Realm of Ash — Turn-Based Medieval RPG" },
+      { title: "Realm of Ash: Turn-Based Medieval RPG" },
       {
         name: "description",
         content:
           "Realm of Ash is a pixel-art turn-based RPG: six warring houses, a branching campaign against a usurper, party combat, dungeons and multiple endings.",
       },
-      { property: "og:title", content: "Realm of Ash — Turn-Based Medieval RPG" },
+      { property: "og:title", content: "Realm of Ash: Turn-Based Medieval RPG" },
       {
         property: "og:description",
         content:
@@ -47,7 +47,13 @@ function Screens() {
     return () => root.classList.remove("world-war", "world-peace");
   }, [tone?.mood]);
   useEffect(() => {
-    setMood(screen === "battle" ? "battle" : screen === "map" || screen === "location" ? "travel" : "quiet");
+    setMood(
+      screen === "battle"
+        ? "battle"
+        : screen === "map" || screen === "location"
+          ? "travel"
+          : "quiet",
+    );
   }, [screen]);
   if (screen === "create") return <CreateHero />;
   if (screen === "lore" && !game) return <LoreScreen />;
@@ -71,7 +77,7 @@ function Page() {
   return (
     <GameProvider>
       <main>
-        <h1 className="sr-only">Realm of Ash — a turn-based medieval RPG</h1>
+        <h1 className="sr-only">Realm of Ash, a turn-based medieval RPG</h1>
         <Screens />
       </main>
     </GameProvider>

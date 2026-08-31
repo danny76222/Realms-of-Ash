@@ -22,19 +22,31 @@ function choiceHints(c: StoryChoice): { tone: "good" | "bad" | "warn"; text: str
   if (c.branch) out.push({ tone: "warn", text: BRANCH_LABEL[c.branch] ?? "locks a path" });
   for (const [f, v] of Object.entries(c.rep ?? {})) {
     if (!v) continue;
-    out.push({ tone: v > 0 ? "good" : "bad", text: `${FACTIONS[f as keyof typeof FACTIONS]?.name ?? f} ${v > 0 ? "+" : ""}${v}` });
+    out.push({
+      tone: v > 0 ? "good" : "bad",
+      text: `${FACTIONS[f as keyof typeof FACTIONS]?.name ?? f} ${v > 0 ? "+" : ""}${v}`,
+    });
   }
   for (const n of c.npc ?? []) {
     const name = NPCS[n.npcId]?.name ?? n.npcId;
     if (n.kill) out.push({ tone: "bad", text: `${name} dies` });
     else if (n.recruit) out.push({ tone: "good", text: `${name} may join you` });
-    else if (n.affinity) out.push({ tone: n.affinity > 0 ? "good" : "bad", text: `${name} ${n.affinity > 0 ? "+" : ""}${n.affinity} regard` });
+    else if (n.affinity)
+      out.push({
+        tone: n.affinity > 0 ? "good" : "bad",
+        text: `${name} ${n.affinity > 0 ? "+" : ""}${n.affinity} regard`,
+      });
   }
   for (const r of c.relations ?? []) {
     out.push({ tone: "warn", text: `${FACTIONS[r.a]?.name} / ${FACTIONS[r.b]?.name} → ${r.kind}` });
   }
-  if (c.gold) out.push({ tone: c.gold > 0 ? "good" : "bad", text: `${c.gold > 0 ? "+" : ""}${c.gold} gold` });
-  if (c.renown) out.push({ tone: c.renown > 0 ? "good" : "bad", text: `${c.renown > 0 ? "+" : ""}${c.renown} renown` });
+  if (c.gold)
+    out.push({ tone: c.gold > 0 ? "good" : "bad", text: `${c.gold > 0 ? "+" : ""}${c.gold} gold` });
+  if (c.renown)
+    out.push({
+      tone: c.renown > 0 ? "good" : "bad",
+      text: `${c.renown > 0 ? "+" : ""}${c.renown} renown`,
+    });
   return out;
 }
 
@@ -71,7 +83,9 @@ export function StoryScreen() {
     return (
       <div className="mx-auto max-w-2xl px-3">
         <Panel title="The Road Ahead">
-          <p className="text-lg">The realm holds its breath. Nothing in the main tale waits on you today.</p>
+          <p className="text-lg">
+            The realm holds its breath. Nothing in the main tale waits on you today.
+          </p>
           <PixelButton className="mt-2" onClick={() => setScreen("location")}>
             Back
           </PixelButton>
@@ -90,7 +104,12 @@ export function StoryScreen() {
       <div className="mx-auto max-w-2xl px-3 pb-8">
         <Panel title={beat.title}>
           {settings.sceneArt && BEAT_ART[beat.id] ? (
-            <SceneArt src={BEAT_ART[beat.id]!} alt={beat.title} className="mb-3" height="h-36 sm:h-48" />
+            <SceneArt
+              src={BEAT_ART[beat.id]!}
+              alt={beat.title}
+              className="mb-3"
+              height="h-36 sm:h-48"
+            />
           ) : null}
           <DialogueBox text={outcome} typewriter={settings.typewriter} />
           <PixelButton
@@ -109,18 +128,29 @@ export function StoryScreen() {
     );
   }
 
-  const speakerId = (beat.choices.flatMap((c) => c.npc ?? []).find((n) => NPCS[n.npcId])?.npcId) ?? null;
+  const speakerId =
+    beat.choices.flatMap((c) => c.npc ?? []).find((n) => NPCS[n.npcId])?.npcId ?? null;
   const speaker = speakerId ? NPCS[speakerId] : null;
 
   return (
     <div className="mx-auto max-w-2xl px-3 pb-8">
-      <Panel title={`Chapter ${beat.chapter} — ${beat.title}`}>
+      <Panel title={`Chapter ${beat.chapter}: ${beat.title}`}>
         {settings.sceneArt && BEAT_ART[beat.id] ? (
-          <SceneArt src={BEAT_ART[beat.id]!} alt={beat.title} className="mb-3" height="h-36 sm:h-48" />
+          <SceneArt
+            src={BEAT_ART[beat.id]!}
+            alt={beat.title}
+            className="mb-3"
+            height="h-36 sm:h-48"
+          />
         ) : null}
         <DialogueBox
           {...(speaker
-            ? { speaker: speaker.name, portrait: settings.sceneArt ? NPC_ART[speaker.id] : undefined, glyph: speaker.portrait, voiceId: speaker.id }
+            ? {
+                speaker: speaker.name,
+                portrait: settings.sceneArt ? NPC_ART[speaker.id] : undefined,
+                glyph: speaker.portrait,
+                voiceId: speaker.id,
+              }
             : {})}
           text={beat.intro(game)}
           typewriter={settings.typewriter}
@@ -128,17 +158,29 @@ export function StoryScreen() {
 
         {battleSpec && !fought ? (
           <div className="mt-3">
-            <p className="pixel-font mb-2 text-[10px] text-destructive">There is fighting to be done first.</p>
+            <p className="pixel-font mb-2 text-[10px] text-destructive">
+              There is fighting to be done first.
+            </p>
             <PixelButton
               variant="danger"
               onClick={() => {
                 update((g) => setFlags(g, { [`fought_${beat.id}`]: true }));
-                fight({ title: battleSpec.title, enemyIds: battleSpec.enemyIds, tag: `story:${beat.id}`, canFlee: false });
+                fight({
+                  title: battleSpec.title,
+                  enemyIds: battleSpec.enemyIds,
+                  tag: `story:${beat.id}`,
+                  canFlee: false,
+                });
               }}
             >
               Take the field
             </PixelButton>
-            <PixelButton className="ml-2" variant="ghost" sfx="cancel" onClick={() => setScreen("location")}>
+            <PixelButton
+              className="ml-2"
+              variant="ghost"
+              sfx="cancel"
+              onClick={() => setScreen("location")}
+            >
               Not yet
             </PixelButton>
           </div>

@@ -25,7 +25,7 @@ export const WEATHERS: Record<WeatherId, Weather> = {
   clear: {
     id: "clear",
     name: "Clear",
-    glyph: "☀",
+    glyph: "clear",
     line: "Clear sky, hard light, and a road you can see the end of.",
     ambushMul: 0.85,
     filter: "saturate(1.05) brightness(1.03)",
@@ -34,7 +34,7 @@ export const WEATHERS: Record<WeatherId, Weather> = {
   overcast: {
     id: "overcast",
     name: "Overcast",
-    glyph: "☁",
+    glyph: "overcast",
     line: "Flat grey overhead. The realm looks like it is thinking something over.",
     ambushMul: 1,
     filter: "saturate(0.85) brightness(0.95)",
@@ -43,7 +43,7 @@ export const WEATHERS: Record<WeatherId, Weather> = {
   rain: {
     id: "rain",
     name: "Rain",
-    glyph: "🌧",
+    glyph: "rain",
     line: "Steady rain. Cloaks soak through, bowstrings sulk, and nobody hears you coming.",
     ambushMul: 1.35,
     filter: "saturate(0.8) brightness(0.85) contrast(1.05)",
@@ -52,7 +52,7 @@ export const WEATHERS: Record<WeatherId, Weather> = {
   storm: {
     id: "storm",
     name: "Storm",
-    glyph: "⛈",
+    glyph: "storm",
     line: "Wind with teeth in it. Thunder walks the hills and the road empties.",
     ambushMul: 1.6,
     filter: "saturate(0.7) brightness(0.72) contrast(1.15)",
@@ -61,7 +61,7 @@ export const WEATHERS: Record<WeatherId, Weather> = {
   snow: {
     id: "snow",
     name: "Snow",
-    glyph: "❄",
+    glyph: "snow",
     line: "Snow, quiet and patient. Tracks last for hours and so do grudges.",
     ambushMul: 1.2,
     filter: "saturate(0.65) brightness(1.06) contrast(0.95)",
@@ -70,7 +70,7 @@ export const WEATHERS: Record<WeatherId, Weather> = {
   fog: {
     id: "fog",
     name: "Fog",
-    glyph: "🌫",
+    glyph: "fog",
     line: "Fog to the knees. The world ends twenty paces out and starts again without warning.",
     ambushMul: 1.45,
     filter: "saturate(0.6) brightness(0.95) contrast(0.85)",
@@ -137,7 +137,7 @@ export interface TimeOfDay {
   label: string;
   /** CSS filter for the sky/scene at this hour. */
   filter: string;
-  /** Extra ambush multiplier — the dark is not on your side. */
+  /** Extra ambush multiplier: the dark is not on your side. */
   ambushMul: number;
 }
 

@@ -1,16 +1,17 @@
 import { useGame } from "@/game/store";
+import { Icon } from "./icons";
 import { FACTIONS, LOCATIONS } from "@/game/world";
 import { tintClass, timeOf, weatherOf } from "@/game/weather";
 import { Panel, PixelButton } from "./ui";
 
 const ICON: Record<string, string> = {
-  village: "🏘",
-  castle: "🏰",
-  dungeon: "🕳",
-  ruin: "🏚",
-  shrine: "⛩",
-  camp: "⛺",
-  landmark: "🗿",
+  village: "village",
+  castle: "castle",
+  dungeon: "dungeon",
+  ruin: "ruin",
+  shrine: "shrine",
+  camp: "camp",
+  landmark: "landmark",
 };
 
 export function WorldMap() {
@@ -35,8 +36,12 @@ export function WorldMap() {
         title="The Marches"
         right={
           <span className="flex items-center gap-2">
-            <span className="pixel-font text-[8px] uppercase text-muted-foreground">Day {game.day} · {time.label} · {sky.glyph} {sky.name}</span>
-            <PixelButton size="sm" variant="ghost" onClick={() => setScreen("location")}>Back</PixelButton>
+            <span className="pixel-font text-[8px] uppercase text-muted-foreground">
+              Day {game.day} · {time.label} · {sky.name}
+            </span>
+            <PixelButton size="sm" variant="ghost" onClick={() => setScreen("location")}>
+              Back
+            </PixelButton>
           </span>
         }
       >
@@ -48,8 +53,18 @@ export function WorldMap() {
           <span aria-hidden className="map-sky" />
           <span aria-hidden className="map-hills" />
           <span aria-hidden className="map-clouds" />
-          {sky.fx !== "none" ? <span aria-hidden className={`wx wx-${sky.fx} pointer-events-none absolute inset-0 z-[3]`} /> : null}
-          <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+          {sky.fx !== "none" ? (
+            <span
+              aria-hidden
+              className={`wx wx-${sky.fx} pointer-events-none absolute inset-0 z-[3]`}
+            />
+          ) : null}
+          <svg
+            className="absolute inset-0 h-full w-full"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            aria-hidden
+          >
             {edges.map(([a, b]) => {
               const la = LOCATIONS[a]!;
               const lb = LOCATIONS[b]!;
@@ -78,7 +93,7 @@ export function WorldMap() {
                 key={loc.id}
                 onClick={() => canGo && goTo(loc.id)}
                 disabled={!canGo && !isHere}
-                title={`${loc.name}${faction ? ` — ${faction.name}` : ""}`}
+                title={`${loc.name}${faction ? `, ${faction.name}` : ""}`}
                 className={`absolute -translate-x-1/2 -translate-y-1/2 px-1 leading-none transition-transform ${
                   isHere ? "z-10 scale-125" : canGo ? "hover:scale-125" : "opacity-55"
                 }`}
@@ -94,21 +109,30 @@ export function WorldMap() {
                       style={{ background: faction?.color ?? "var(--primary)" }}
                     />
                   ) : null}
-                  <span className="block text-lg drop-shadow">{ICON[loc.kind] ?? "•"}</span>
+                  <Icon name={ICON[loc.kind] ?? "place"} className="block text-lg drop-shadow" />
                 </span>
                 <span
                   className="pixel-font block text-[7px] whitespace-nowrap"
-                  style={{ color: isHere ? "oklch(0.85 0.15 68)" : faction?.color ?? "oklch(0.7 0.02 80)" }}
+                  style={{
+                    color: isHere
+                      ? "oklch(0.85 0.15 68)"
+                      : (faction?.color ?? "oklch(0.7 0.02 80)"),
+                  }}
                 >
                   {loc.name}
                 </span>
-                {isHere ? <span className="party-token pixel-font block text-[8px] text-primary">▲ you</span> : null}
+                {isHere ? (
+                  <span className="party-token pixel-font block text-[8px] text-primary">
+                    ▲ you
+                  </span>
+                ) : null}
               </button>
             );
           })}
         </div>
         <p className="mt-2 text-sm text-muted-foreground">
-          Click a connected settlement to travel. Every leg of road costs a day, and the roads are not what they were.
+          Click a connected settlement to travel. Every leg of road costs a day, and the roads are
+          not what they were.
         </p>
         <div className="mt-2 flex flex-wrap gap-2">
           {here.links.map((l) => (

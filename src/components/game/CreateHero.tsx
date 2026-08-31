@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Icon } from "./icons";
 import { BACKGROUNDS, CLASSES, PORTRAITS, SKILLS } from "@/game/data";
 import { newGame } from "@/game/state";
 import { useGame } from "@/game/store";
@@ -40,10 +41,10 @@ export function CreateHero() {
               <button
                 key={p}
                 onClick={() => setPortrait(p)}
-                aria-label={`portrait ${p}`}
-                className={`pixel-btn h-10 w-10 text-xl ${portrait === p ? "bg-primary" : "bg-secondary"}`}
+                aria-label={`Device ${p.replace("device-", "")}`}
+                className={`pixel-btn flex h-10 w-10 items-center justify-center text-lg ${portrait === p ? "bg-primary" : "bg-secondary"}`}
               >
-                {p}
+                <Icon name={p} />
               </button>
             ))}
           </div>
@@ -65,14 +66,14 @@ export function CreateHero() {
                 onClick={() => setClassId(c.id)}
                 className={`pixel-btn px-2 py-2 text-left text-sm ${classId === c.id ? "bg-primary text-primary-foreground" : "bg-secondary"}`}
               >
-                <span className="mr-1">{c.sprite}</span>
+                <Icon name={c.sprite} className="mr-1" />
                 <span className="pixel-font text-[10px]">{c.name}</span>
               </button>
             ))}
           </div>
           <p className="mt-2 text-sm text-muted-foreground">{cls.blurb}</p>
           <p className="mt-1 text-sm">
-            Starting skill: <span className="text-primary">{SKILLS[cls.startSkill]?.name}</span> —{" "}
+            Starting skill: <span className="text-primary">{SKILLS[cls.startSkill]?.name}</span>.{" "}
             {SKILLS[cls.startSkill]?.desc}
           </p>
         </Panel>
@@ -94,7 +95,9 @@ export function CreateHero() {
 
         <Panel title="Muster Roll">
           <div className="flex items-center gap-3">
-            <div className="pixel-frame flex h-16 w-16 items-center justify-center bg-background text-3xl">{portrait}</div>
+            <div className="pixel-frame flex h-16 w-16 items-center justify-center bg-background text-3xl">
+              <Icon name={portrait} />
+            </div>
             <div>
               <p className="pixel-font text-[11px] text-primary">{name.trim() || "Nameless"}</p>
               <p className="text-sm text-muted-foreground">
@@ -103,18 +106,34 @@ export function CreateHero() {
             </div>
           </div>
           <ul className="mt-3 grid grid-cols-2 gap-1 text-sm">
-            <li>❤ HP {stats.maxHp}</li>
-            <li>⚔ Attack {stats.atk}</li>
-            <li>🛡 Defence {stats.def}</li>
-            <li>👢 Speed {stats.spd}</li>
-            <li>🪙 Gold {bg.gold}</li>
-            <li>📯 Renown {bg.renown}</li>
+            <li>
+              <Icon name="hp" /> HP {stats.maxHp}
+            </li>
+            <li>
+              <Icon name="atk" /> Attack {stats.atk}
+            </li>
+            <li>
+              <Icon name="def" /> Defence {stats.def}
+            </li>
+            <li>
+              <Icon name="spd" /> Speed {stats.spd}
+            </li>
+            <li>
+              <Icon name="gold" /> Gold {bg.gold}
+            </li>
+            <li>
+              <Icon name="renown" /> Renown {bg.renown}
+            </li>
           </ul>
           <div className="mt-3 flex gap-2">
             <PixelButton variant="ghost" onClick={() => setScreen("title")}>
               Back
             </PixelButton>
-            <PixelButton onClick={() => start(newGame({ heroName: name, heroClass: classId, background, portrait }))}>
+            <PixelButton
+              onClick={() =>
+                start(newGame({ heroName: name, heroClass: classId, background, portrait }))
+              }
+            >
               Ride Out
             </PixelButton>
           </div>

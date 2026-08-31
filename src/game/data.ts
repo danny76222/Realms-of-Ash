@@ -15,7 +15,7 @@ export const CLASSES: Record<
   warrior: {
     id: "warrior",
     name: "Warrior",
-    sprite: "⚔",
+    sprite: "sword",
     blurb: "A sworn blade of the shield-wall. Heavy armour, heavier swings.",
     base: { maxHp: 46, atk: 12, def: 9, spd: 6 },
     growth: { maxHp: 8, atk: 3, def: 2, spd: 1 },
@@ -24,7 +24,7 @@ export const CLASSES: Record<
   archer: {
     id: "archer",
     name: "Archer",
-    sprite: "🏹",
+    sprite: "bow",
     blurb: "A forest-born marksman. Finds the gap in any plate.",
     base: { maxHp: 34, atk: 13, def: 5, spd: 10 },
     growth: { maxHp: 5, atk: 3, def: 1, spd: 2 },
@@ -33,7 +33,7 @@ export const CLASSES: Record<
   healer: {
     id: "healer",
     name: "Healer",
-    sprite: "✚",
+    sprite: "chalice",
     blurb: "A wandering keeper of the old rites. Mends flesh, steadies nerve.",
     base: { maxHp: 32, atk: 8, def: 5, spd: 8 },
     growth: { maxHp: 5, atk: 2, def: 1, spd: 1 },
@@ -42,7 +42,7 @@ export const CLASSES: Record<
   squire: {
     id: "squire",
     name: "Squire",
-    sprite: "🛡",
+    sprite: "shield",
     blurb: "A young oath-taker with a battered kite shield.",
     base: { maxHp: 42, atk: 9, def: 10, spd: 5 },
     growth: { maxHp: 7, atk: 2, def: 3, spd: 1 },
@@ -51,7 +51,7 @@ export const CLASSES: Record<
   scout: {
     id: "scout",
     name: "Scout",
-    sprite: "🗡",
+    sprite: "dagger",
     blurb: "A border rider who knows every ditch and deer path.",
     base: { maxHp: 36, atk: 11, def: 6, spd: 12 },
     growth: { maxHp: 6, atk: 3, def: 1, spd: 2 },
@@ -110,7 +110,7 @@ export const BACKGROUNDS: Record<
   },
 };
 
-export const PORTRAITS = ["🧔", "👩‍🦰", "🧝", "🧙", "🤺", "👸", "🥷", "🧑‍🌾"];
+export const PORTRAITS = ["device-1", "device-2", "device-3", "device-4", "device-5", "device-6", "device-7", "device-8"];
 
 /* ---------------- items ---------------- */
 

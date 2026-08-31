@@ -1,4 +1,5 @@
 import { ITEMS, SKILLS, skillsAvailableAt } from "@/game/data";
+import { Icon } from "./icons";
 import { unitArt } from "@/game/art";
 import { useSettings } from "@/game/settings";
 import { unitStats } from "@/game/engine";
@@ -24,19 +25,36 @@ export function PartyPanel() {
               <li key={u.id} className="border border-border bg-background/40 p-2">
                 <div className="flex items-center gap-2">
                   <Portrait
-                    src={settings.sceneArt ? unitArt({ npcId: u.npcId, classId: u.classId, unitId: u.id, name: u.name }) : undefined}
-                    glyph={u.isHero ? game.portrait : "🗡"}
+                    src={
+                      settings.sceneArt
+                        ? unitArt({
+                            npcId: u.npcId,
+                            classId: u.classId,
+                            unitId: u.id,
+                            name: u.name,
+                          })
+                        : undefined
+                    }
+                    glyph={u.isHero ? game.portrait : "dagger"}
                     alt={u.name}
                     size="h-10 w-10"
                   />
                   <span className="pixel-font flex-1 text-[10px] text-primary">{u.name}</span>
                   <span className="pixel-font text-[9px] text-muted-foreground">Lv {u.level}</span>
                 </div>
-                <Bar value={u.hp} max={s.maxHp} tone="hp" label={`${u.hp}/${s.maxHp} hp · ⚔${s.atk} 🛡${s.def} 👢${s.spd}`} />
+                <Bar
+                  value={u.hp}
+                  max={s.maxHp}
+                  tone="hp"
+                  label={`${u.hp}/${s.maxHp} hp, ${s.atk} atk, ${s.def} def, ${s.spd} spd`}
+                />
 
                 <div className="mt-1 flex flex-wrap gap-1">
                   {u.skills.map((sid) => (
-                    <span key={sid} className="pixel-font border border-border px-1 text-[8px] text-muted-foreground">
+                    <span
+                      key={sid}
+                      className="pixel-font border border-border px-1 text-[8px] text-muted-foreground"
+                    >
                       {SKILLS[sid]?.name}
                     </span>
                   ))}
@@ -78,21 +96,36 @@ export function PartyPanel() {
               const item = ITEMS[id];
               if (!item) return null;
               return (
-                <li key={id} className="flex flex-wrap items-center gap-1 border border-border bg-background/40 px-2 py-1">
+                <li
+                  key={id}
+                  className="flex flex-wrap items-center gap-1 border border-border bg-background/40 px-2 py-1"
+                >
                   <span className="min-w-0 flex-1 truncate text-sm">
                     {item.name} ×{qty}
                   </span>
                   {item.kind === "weapon" || item.kind === "armor" ? (
-                    <PixelButton size="sm" variant="ghost" onClick={() => update((g) => equipItem(g, hero.id, id))}>
+                    <PixelButton
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => update((g) => equipItem(g, hero.id, id))}
+                    >
                       Equip
                     </PixelButton>
                   ) : null}
                   {item.kind === "potion" ? (
-                    <PixelButton size="sm" variant="accent" onClick={() => update((g) => useItemOutOfBattle(g, id, hero.id))}>
+                    <PixelButton
+                      size="sm"
+                      variant="accent"
+                      onClick={() => update((g) => useItemOutOfBattle(g, id, hero.id))}
+                    >
                       Use
                     </PixelButton>
                   ) : null}
-                  <PixelButton size="sm" variant="danger" onClick={() => update((g) => sellItem(g, id))}>
+                  <PixelButton
+                    size="sm"
+                    variant="danger"
+                    onClick={() => update((g) => sellItem(g, id))}
+                  >
                     Sell {Math.round(item.price * 0.5)}
                   </PixelButton>
                 </li>

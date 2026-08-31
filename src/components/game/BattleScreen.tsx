@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Icon } from "./icons";
 import { activeCombatant } from "@/game/engine";
 import { ITEMS, SKILLS } from "@/game/data";
 import { useGame } from "@/game/store";
@@ -16,11 +17,21 @@ interface Pop {
   tone: "dmg" | "crit" | "heal";
 }
 
-function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "good" | "bad" }) {
+function Badge({
+  children,
+  tone = "neutral",
+}: {
+  children: React.ReactNode;
+  tone?: "neutral" | "good" | "bad";
+}) {
   return (
     <span
       className={`pixel-font border px-1 text-[8px] ${
-        tone === "good" ? "border-accent text-accent" : tone === "bad" ? "border-destructive text-destructive" : "border-border text-muted-foreground"
+        tone === "good"
+          ? "border-accent text-accent"
+          : tone === "bad"
+            ? "border-destructive text-destructive"
+            : "border-border text-muted-foreground"
       }`}
     >
       {children}
@@ -29,7 +40,15 @@ function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone
 }
 
 /** Corner status plate, in the classic handheld-RPG style. */
-function StatusPlate({ c, active, align }: { c: Combatant; active: boolean; align: "left" | "right" }) {
+function StatusPlate({
+  c,
+  active,
+  align,
+}: {
+  c: Combatant;
+  active: boolean;
+  align: "left" | "right";
+}) {
   return (
     <div
       className={`pixel-frame w-full bg-card/90 px-2 py-1 ${align === "right" ? "text-right" : "text-left"} ${
@@ -41,7 +60,9 @@ function StatusPlate({ c, active, align }: { c: Combatant; active: boolean; alig
         {c.name}
       </div>
       <Bar value={c.hp} max={c.maxHp} tone="hp" />
-      <div className={`mt-1 flex items-center gap-2 ${align === "right" ? "flex-row-reverse" : ""}`}>
+      <div
+        className={`mt-1 flex items-center gap-2 ${align === "right" ? "flex-row-reverse" : ""}`}
+      >
         <div className="w-14">
           <Bar value={c.focus} max={c.maxFocus} tone="focus" />
         </div>
@@ -53,8 +74,18 @@ function StatusPlate({ c, active, align }: { c: Combatant; active: boolean; alig
         {c.defending ? <Badge>guard</Badge> : null}
         {c.guard > 0 ? <Badge>ward {c.guard}</Badge> : null}
         {c.fx.stunned ? <Badge tone="bad">stunned</Badge> : null}
-        {c.fx.atkMod ? <Badge tone={c.fx.atkMod > 0 ? "good" : "bad"}>atk {c.fx.atkMod > 0 ? "+" : ""}{c.fx.atkMod}</Badge> : null}
-        {c.fx.defMod ? <Badge tone={c.fx.defMod > 0 ? "good" : "bad"}>def {c.fx.defMod > 0 ? "+" : ""}{c.fx.defMod}</Badge> : null}
+        {c.fx.atkMod ? (
+          <Badge tone={c.fx.atkMod > 0 ? "good" : "bad"}>
+            atk {c.fx.atkMod > 0 ? "+" : ""}
+            {c.fx.atkMod}
+          </Badge>
+        ) : null}
+        {c.fx.defMod ? (
+          <Badge tone={c.fx.defMod > 0 ? "good" : "bad"}>
+            def {c.fx.defMod > 0 ? "+" : ""}
+            {c.fx.defMod}
+          </Badge>
+        ) : null}
       </div>
     </div>
   );
@@ -98,7 +129,11 @@ function Fighter({
         <span
           key={pop.key}
           className={`float-num pixel-font text-[12px] ${
-            pop.tone === "heal" ? "text-accent" : pop.tone === "crit" ? "text-destructive" : "text-foreground"
+            pop.tone === "heal"
+              ? "text-accent"
+              : pop.tone === "crit"
+                ? "text-destructive"
+                : "text-foreground"
           }`}
         >
           {pop.text}
@@ -124,7 +159,12 @@ function Fighter({
 export function BattleScreen() {
   const { battle, game, act, closeBattle } = useGame();
   const { settings } = useSettings();
-  const [mode, setMode] = useState<null | { kind: "attack" } | { kind: "skill"; skillId: string } | { kind: "item"; itemId: string }>(null);
+  const [mode, setMode] = useState<
+    | null
+    | { kind: "attack" }
+    | { kind: "skill"; skillId: string }
+    | { kind: "item"; itemId: string }
+  >(null);
   const [panel, setPanel] = useState<null | "skill" | "item">(null);
   const [showLog, setShowLog] = useState(false);
   const [fx, setFx] = useState<Record<string, string>>({});
@@ -133,7 +173,9 @@ export function BattleScreen() {
   const [intro, setIntro] = useState(true);
   const prevHp = useRef<Record<string, number>>({});
   const prevStatus = useRef<string | null>(null);
-  const battleKey = battle ? `${battle.title}|${battle.returnTo}|${battle.combatants.map((c) => c.id).join(",")}` : "";
+  const battleKey = battle
+    ? `${battle.title}|${battle.returnTo}|${battle.combatants.map((c) => c.id).join(",")}`
+    : "";
   const actor = useMemo(() => (battle ? activeCombatant(battle) : null), [battle]);
 
   // Fresh encounter → replay the intro wipe.
@@ -160,7 +202,11 @@ export function BattleScreen() {
         const crit = Math.abs(delta) >= Math.round(c.maxHp * 0.28);
         crits ||= crit;
         nextFx[c.id] = crit ? "fx-crit" : "fx-hit";
-        nextPops[c.id] = { key: stamp + c.id.length, text: `${delta}`, tone: crit ? "crit" : "dmg" };
+        nextPops[c.id] = {
+          key: stamp + c.id.length,
+          text: `${delta}`,
+          tone: crit ? "crit" : "dmg",
+        };
         playSfx(crit ? "crit" : "hit");
       } else {
         nextFx[c.id] = "fx-heal";
@@ -198,8 +244,12 @@ export function BattleScreen() {
   const allies = battle.combatants.filter((c) => c.side === "ally");
   const foes = battle.combatants.filter((c) => c.side === "enemy");
   const myTurn = battle.status === "active" && actor?.side === "ally";
-  const potions = Object.keys(game.inventory).filter((id) => ITEMS[id]?.kind === "potion" && (game.inventory[id] ?? 0) > 0);
-  const backdrop = settings.sceneArt ? LOCATION_ART[LOCATIONS[battle.returnTo]?.kind ?? "landmark"] : undefined;
+  const potions = Object.keys(game.inventory).filter(
+    (id) => ITEMS[id]?.kind === "potion" && (game.inventory[id] ?? 0) > 0,
+  );
+  const backdrop = settings.sceneArt
+    ? LOCATION_ART[LOCATIONS[battle.returnTo]?.kind ?? "landmark"]
+    : undefined;
 
   const allyArt = (c: Combatant) => {
     if (!settings.sceneArt) return undefined;
@@ -231,12 +281,20 @@ export function BattleScreen() {
 
       <Panel
         title={battle.title}
-        right={<span className="pixel-font text-[9px] text-muted-foreground">Round {battle.round}</span>}
+        right={
+          <span className="pixel-font text-[9px] text-muted-foreground">Round {battle.round}</span>
+        }
       >
         {/* ── Arena ─────────────────────────────────────────── */}
         <div className="battle-arena relative overflow-hidden border-2 border-border">
           {backdrop ? (
-            <img src={backdrop} alt="" aria-hidden loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-35 [image-rendering:pixelated]" />
+            <img
+              src={backdrop}
+              alt=""
+              aria-hidden
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover opacity-35 [image-rendering:pixelated]"
+            />
           ) : null}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/55 via-background/25 to-background/85" />
 
@@ -244,7 +302,12 @@ export function BattleScreen() {
           <div className="relative flex items-start justify-between gap-2 p-3">
             <div className="w-40 space-y-1 sm:w-52">
               {foes.map((c) => (
-                <StatusPlate key={c.id} c={c} align="left" active={actor?.id === c.id && battle.status === "active"} />
+                <StatusPlate
+                  key={c.id}
+                  c={c}
+                  align="left"
+                  active={actor?.id === c.id && battle.status === "active"}
+                />
               ))}
             </div>
             <div className="flex flex-wrap items-end justify-end gap-2">
@@ -285,7 +348,12 @@ export function BattleScreen() {
             </div>
             <div className="w-40 space-y-1 sm:w-52">
               {allies.map((c) => (
-                <StatusPlate key={c.id} c={c} align="right" active={actor?.id === c.id && battle.status === "active"} />
+                <StatusPlate
+                  key={c.id}
+                  c={c}
+                  align="right"
+                  active={actor?.id === c.id && battle.status === "active"}
+                />
               ))}
             </div>
           </div>
@@ -293,7 +361,9 @@ export function BattleScreen() {
 
         {/* ── Turn order ────────────────────────────────────── */}
         <div className="mt-2 flex flex-wrap items-center gap-1">
-          <span className="pixel-font mr-1 text-[8px] uppercase text-muted-foreground">Turn order</span>
+          <span className="pixel-font mr-1 text-[8px] uppercase text-muted-foreground">
+            Turn order
+          </span>
           {battle.order.map((id, i) => {
             const c = battle.combatants.find((x) => x.id === id);
             if (!c) return null;
@@ -321,14 +391,13 @@ export function BattleScreen() {
 
         {/* ── Command box ───────────────────────────────────── */}
         <div className="command-box mt-3 border-2 border-border bg-background/80 p-3">
-
           {banner ? <p className="mb-2 text-lg leading-snug text-foreground">{banner}</p> : null}
 
           {battle.status === "active" ? (
             myTurn && actor ? (
               <>
                 <p className="pixel-font mb-2 text-[10px] text-primary">
-                  {actor.name}'s turn{mode ? " — pick a target" : panel ? " — choose" : ""}
+                  {actor.name}'s turn{mode ? ": pick a target" : panel ? ": choose" : ""}
                 </p>
 
                 {mode ? (
@@ -342,14 +411,17 @@ export function BattleScreen() {
                       if (!sk) return null;
                       const canUse = actor.focus >= sk.cost;
                       const selfTarget =
-                        sk.effect.type === "heal" || sk.effect.type === "guard" || sk.effect.type === "buffAtk" || sk.effect.type === "focus";
+                        sk.effect.type === "heal" ||
+                        sk.effect.type === "guard" ||
+                        sk.effect.type === "buffAtk" ||
+                        sk.effect.type === "focus";
                       return (
                         <PixelButton
                           key={sid}
                           size="sm"
                           variant="accent"
                           disabled={!canUse}
-                          title={`${sk.desc} — ${sk.cost} focus${canUse ? "" : " (not enough focus)"}`}
+                          title={`${sk.desc}. ${sk.cost} focus${canUse ? "" : " (not enough focus)"}`}
                           onClick={() => {
                             if (selfTarget) {
                               act({ kind: "skill", skillId: sid });
@@ -363,7 +435,12 @@ export function BattleScreen() {
                         </PixelButton>
                       );
                     })}
-                    <PixelButton size="sm" variant="ghost" sfx="cancel" onClick={() => setPanel(null)}>
+                    <PixelButton
+                      size="sm"
+                      variant="ghost"
+                      sfx="cancel"
+                      onClick={() => setPanel(null)}
+                    >
                       ← Back
                     </PixelButton>
                   </div>
@@ -371,39 +448,76 @@ export function BattleScreen() {
                   <div className="flex flex-wrap gap-1">
                     {potions.length ? (
                       potions.map((id) => (
-                        <PixelButton key={id} size="sm" variant="ghost" onClick={() => setMode({ kind: "item", itemId: id })}>
+                        <PixelButton
+                          key={id}
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setMode({ kind: "item", itemId: id })}
+                        >
                           {ITEMS[id]!.name} ×{game.inventory[id]}
                         </PixelButton>
                       ))
                     ) : (
                       <span className="text-sm text-muted-foreground">Your packs are empty.</span>
                     )}
-                    <PixelButton size="sm" variant="ghost" sfx="cancel" onClick={() => setPanel(null)}>
+                    <PixelButton
+                      size="sm"
+                      variant="ghost"
+                      sfx="cancel"
+                      onClick={() => setPanel(null)}
+                    >
                       ← Back
                     </PixelButton>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2 sm:max-w-md">
-                    <PixelButton className="justify-center py-3" onClick={() => setMode({ kind: "attack" })}>
-                      ⚔ Attack
+                    <PixelButton
+                      className="justify-center py-3"
+                      onClick={() => setMode({ kind: "attack" })}
+                    >
+                      <Icon name="attack" /> Attack
                     </PixelButton>
-                    <PixelButton className="justify-center py-3" variant="ghost" onClick={() => act({ kind: "defend" })}>
-                      🛡 Defend
+                    <PixelButton
+                      className="justify-center py-3"
+                      variant="ghost"
+                      onClick={() => act({ kind: "defend" })}
+                    >
+                      <Icon name="defend" /> Defend
                     </PixelButton>
-                    <PixelButton className="justify-center py-3" variant="accent" disabled={!actor.skills.length} onClick={() => setPanel("skill")}>
-                      ✨ Skill
+                    <PixelButton
+                      className="justify-center py-3"
+                      variant="accent"
+                      disabled={!actor.skills.length}
+                      onClick={() => setPanel("skill")}
+                    >
+                      <Icon name="skill" /> Skill
                     </PixelButton>
                     {battle.canFlee ? (
-                      <PixelButton className="justify-center py-3" variant="danger" sfx="cancel" onClick={() => act({ kind: "flee" })}>
-                        🏃 Flee
+                      <PixelButton
+                        className="justify-center py-3"
+                        variant="danger"
+                        sfx="cancel"
+                        onClick={() => act({ kind: "flee" })}
+                      >
+                        <Icon name="flee" /> Flee
                       </PixelButton>
                     ) : (
-                      <PixelButton className="justify-center py-3" variant="ghost" disabled title="No way out of this one">
-                        🏃 Flee
+                      <PixelButton
+                        className="justify-center py-3"
+                        variant="ghost"
+                        disabled
+                        title="No way out of this one"
+                      >
+                        <Icon name="flee" /> Flee
                       </PixelButton>
                     )}
-                    <PixelButton className="col-span-2 justify-center" size="sm" variant="ghost" onClick={() => setPanel("item")}>
-                      🎒 Item{potions.length ? ` (${potions.length})` : ""}
+                    <PixelButton
+                      className="col-span-2 justify-center"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setPanel("item")}
+                    >
+                      <Icon name="item" /> Item{potions.length ? ` (${potions.length})` : ""}
                     </PixelButton>
                   </div>
                 )}
@@ -414,12 +528,18 @@ export function BattleScreen() {
           ) : (
             <div className="flex flex-wrap items-center gap-2">
               <p className="pixel-font text-[11px] text-primary">
-                {battle.status === "won" ? "Victory." : battle.status === "lost" ? "Defeated." : "You broke away."}
+                {battle.status === "won"
+                  ? "Victory."
+                  : battle.status === "lost"
+                    ? "Defeated."
+                    : "You broke away."}
               </p>
               {battle.status === "won" ? (
                 <span className="text-sm text-muted-foreground">
                   +{battle.reward.gold} gold, +{battle.reward.xp} xp
-                  {battle.reward.loot.length ? `, ${battle.reward.loot.map((l) => ITEMS[l]?.name ?? l).join(", ")}` : ""}
+                  {battle.reward.loot.length
+                    ? `, ${battle.reward.loot.map((l) => ITEMS[l]?.name ?? l).join(", ")}`
+                    : ""}
                 </span>
               ) : null}
               <PixelButton size="sm" sfx="confirm" onClick={closeBattle}>

@@ -54,7 +54,7 @@ export function applyChoice(state: GameState, beat: StoryBeat, choice: StoryChoi
       },
     ],
   };
-  s = pushLog(s, `${beat.title} — ${choice.label}.`);
+  s = pushLog(s, `${beat.title}: ${choice.label}.`);
   return advanceDays(s, 1);
 }
 

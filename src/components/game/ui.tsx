@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { Icon } from "./icons";
 import { cn } from "@/lib/utils";
 import { playSfx, type Sfx } from "@/game/sound";
 import { speakLine, stopSpeech, stripForSpeech, voiceSupported } from "@/game/voice";
@@ -17,7 +18,12 @@ export function Panel({
   right?: ReactNode;
 }) {
   return (
-    <section className={cn("ornate surface-parchment screen-in bg-card/85 p-3 backdrop-blur-[1px]", className)}>
+    <section
+      className={cn(
+        "ornate surface-parchment screen-in bg-card/85 p-3 backdrop-blur-[1px]",
+        className,
+      )}
+    >
       {title ? (
         <header className="mb-2 flex items-center justify-between gap-2 border-b border-border pb-1">
           <h2 className="heading-font text-sm text-primary">{title}</h2>
@@ -53,12 +59,32 @@ export function SceneArt({
   weather?: string;
 }) {
   return (
-    <div className={cn("art-frame art-in banner-vignette relative w-full overflow-hidden", height, tint, className)} key={src}>
-      <img src={src} alt={alt} loading="lazy" className="h-full w-full object-cover" style={filter ? { filter } : undefined} />
+    <div
+      className={cn(
+        "art-frame art-in banner-vignette relative w-full overflow-hidden",
+        height,
+        tint,
+        className,
+      )}
+      key={src}
+    >
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        className="h-full w-full object-cover"
+        style={filter ? { filter } : undefined}
+      />
       {bannerColor ? (
-        <span aria-hidden className="banner-strip absolute inset-x-0 top-0 z-[1]" style={{ ["--banner-color" as string]: bannerColor }} />
+        <span
+          aria-hidden
+          className="banner-strip absolute inset-x-0 top-0 z-[1]"
+          style={{ ["--banner-color" as string]: bannerColor }}
+        />
       ) : null}
-      {weather && weather !== "none" ? <span aria-hidden className={`wx wx-${weather} pointer-events-none absolute inset-0`} /> : null}
+      {weather && weather !== "none" ? (
+        <span aria-hidden className={`wx wx-${weather} pointer-events-none absolute inset-0`} />
+      ) : null}
       <div className="art-grain pointer-events-none absolute inset-0" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/85 via-transparent to-background/30" />
     </div>
@@ -82,13 +108,24 @@ export function Portrait({
   mood?: string;
 }) {
   return (
-    <span className={cn("ornate surface-stone flex shrink-0 items-center justify-center overflow-hidden bg-background", size, mood ? `mood-${mood}` : null, className)}>
+    <span
+      className={cn(
+        "ornate surface-stone flex shrink-0 items-center justify-center overflow-hidden bg-background",
+        size,
+        mood ? `mood-${mood}` : null,
+        className,
+      )}
+    >
       {src ? (
-        <img key={src} src={src} alt={alt} loading="lazy" className="portrait-fade h-full w-full object-cover" />
+        <img
+          key={src}
+          src={src}
+          alt={alt}
+          loading="lazy"
+          className="portrait-fade h-full w-full object-cover"
+        />
       ) : (
-        <span aria-hidden className="text-xl">
-          {glyph}
-        </span>
+        <Icon name={glyph} className="text-xl opacity-70" />
       )}
     </span>
   );
@@ -154,16 +191,24 @@ export function Bar({
   return (
     <div className="w-full">
       <div className="hp-bar h-2 w-full border border-border bg-background">
-        <div className={cn("h-full transition-[width] duration-300", color)} style={{ width: `${pct}%` }} />
+        <div
+          className={cn("h-full transition-[width] duration-300", color)}
+          style={{ width: `${pct}%` }}
+        />
       </div>
-      {label ? <div className="pixel-font mt-0.5 text-[8px] text-muted-foreground">{label}</div> : null}
+      {label ? (
+        <div className="pixel-font mt-0.5 text-[8px] text-muted-foreground">{label}</div>
+      ) : null}
     </div>
   );
 }
 
 export function Stat({ icon, value, title }: { icon: string; value: ReactNode; title?: string }) {
   return (
-    <span title={title} className="pixel-font inline-flex items-center gap-1 text-[10px] text-foreground">
+    <span
+      title={title}
+      className="pixel-font inline-flex items-center gap-1 text-[10px] text-foreground"
+    >
       <span aria-hidden>{icon}</span>
       {value}
     </span>
@@ -233,7 +278,7 @@ export function Typewriter({
 /**
  * Speaks a line with the active speech provider and reports how far the
  * voice has got, so subtitles can highlight in sync. Silent no-op when voice
- * is off or unsupported — the written line is always the source of truth.
+ * is off or unsupported. The written line is always the source of truth.
  */
 function useSpokenLine(text: string, voiceId: string | undefined, active: boolean) {
   const [spokenChars, setSpokenChars] = useState(0);
@@ -272,7 +317,7 @@ function useSpokenLine(text: string, voiceId: string | undefined, active: boolea
 export function DialogueBox({
   speaker,
   portrait,
-  glyph = "❖",
+  glyph = "device-1",
   text,
   typewriter = true,
   voiceId,
@@ -299,11 +344,28 @@ export function DialogueBox({
   const { spokenChars, speaking, failed } = useSpokenLine(text, voiceId, voiceOn);
 
   return (
-    <div className={cn("dialogue-box relative flex gap-3 border border-border bg-background/70 p-3", className)}>
-      {speaker ? <Portrait src={portrait} glyph={glyph} alt={speaker} size="h-16 w-16" {...(mood ? { mood } : {})} /> : null}
+    <div
+      className={cn(
+        "dialogue-box relative flex gap-3 border border-border bg-background/70 p-3",
+        className,
+      )}
+    >
+      {speaker ? (
+        <Portrait
+          src={portrait}
+          glyph={glyph}
+          alt={speaker}
+          size="h-16 w-16"
+          {...(mood ? { mood } : {})}
+        />
+      ) : null}
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-start gap-2">
-          {speaker ? <p className="heading-font flex-1 text-sm text-primary">{speaker}</p> : <span className="flex-1" />}
+          {speaker ? (
+            <p className="heading-font flex-1 text-sm text-primary">{speaker}</p>
+          ) : (
+            <span className="flex-1" />
+          )}
           {supported ? (
             <button
               type="button"
@@ -312,16 +374,27 @@ export function DialogueBox({
               title={settings.voice ? "Mute spoken dialogue" : "Speak dialogue aloud"}
               className="pixel-font border border-border px-1 py-0.5 text-[8px] uppercase text-muted-foreground hover:border-primary hover:text-primary"
             >
-              {settings.voice ? (speaking ? "🔊 speaking" : "🔊 voice") : "🔇 voice"}
+              <>
+                <Icon name={settings.voice ? "voice-on" : "voice-off"} />{" "}
+                {settings.voice ? (speaking ? "speaking" : "voice") : "voice"}
+              </>
             </button>
           ) : null}
         </div>
-        <Typewriter text={text} enabled={typewriter} className="text-lg leading-relaxed text-foreground" />
+        <Typewriter
+          text={text}
+          enabled={typewriter}
+          className="text-lg leading-relaxed text-foreground"
+        />
         {voiceOn ? (
           <p className="subtitle-band mt-2 border-t border-border pt-1 text-sm">
             <span className="text-primary">{text.slice(0, spokenChars)}</span>
             <span className="text-muted-foreground">{text.slice(spokenChars)}</span>
-            {failed ? <span className="pixel-font ml-2 text-[8px] uppercase text-muted-foreground">voice unavailable — text only</span> : null}
+            {failed ? (
+              <span className="pixel-font ml-2 text-[8px] uppercase text-muted-foreground">
+                voice unavailable, text only
+              </span>
+            ) : null}
           </p>
         ) : null}
         {children}
@@ -330,16 +403,33 @@ export function DialogueBox({
   );
 }
 
-
 /** Labelled meter with named tiers, used for courtship regard. */
-export function Meter({ value, max = 100, label, tone = "accent" }: { value: number; max?: number; label?: string; tone?: "accent" | "hp" }) {
+export function Meter({
+  value,
+  max = 100,
+  label,
+  tone = "accent",
+}: {
+  value: number;
+  max?: number;
+  label?: string;
+  tone?: "accent" | "hp";
+}) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   return (
     <div className="w-full">
       <div className="hp-bar h-2.5 w-full border border-border bg-background">
-        <div className={cn("h-full transition-[width] duration-500", tone === "accent" ? "bg-accent" : "bg-destructive")} style={{ width: `${pct}%` }} />
+        <div
+          className={cn(
+            "h-full transition-[width] duration-500",
+            tone === "accent" ? "bg-accent" : "bg-destructive",
+          )}
+          style={{ width: `${pct}%` }}
+        />
       </div>
-      {label ? <div className="pixel-font mt-0.5 text-[8px] text-muted-foreground">{label}</div> : null}
+      {label ? (
+        <div className="pixel-font mt-0.5 text-[8px] text-muted-foreground">{label}</div>
+      ) : null}
     </div>
   );
 }

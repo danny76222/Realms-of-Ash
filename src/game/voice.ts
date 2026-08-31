@@ -19,7 +19,7 @@ export interface VoiceProfile extends StudioHints {
 }
 
 export interface SpeakHandlers {
-  /** Fired as the engine crosses a word boundary — used for synced subtitles. */
+  /** Fired as the engine crosses a word boundary, used for synced subtitles. */
   onProgress?: (charIndex: number) => void;
   onStart?: () => void;
   onEnd?: () => void;
@@ -271,7 +271,7 @@ export function stopSpeech() {
 export function stripForSpeech(text: string): string {
   return text
     .replace(/[«»"“”]/g, "")
-    .replace(/[—–]/g, ", ")
+    .replace(/[\u2014\u2013]/g, ", ")
     .replace(/[▶❖·]/g, " ")
     .replace(/\s+/g, " ")
     .trim();

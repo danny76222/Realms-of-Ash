@@ -131,21 +131,51 @@ shown to fail on an injected unseeded draw before it is trusted.
 This is what makes the reputation work tunable: you cannot ask whether standing
 changed the events without running the same campaign twice.
 
+## 11. No em-dashes, no emoji
+
+**Ruled 2026-08-31.** Cut both. This closes what was open question 1.
+
+Where the line falls, since "emoji" needs a definition to be gateable:
+
+- **Cut:** pictographic emoji, the ones that render as colour glyphs. These were
+  doing real work as house banners, map markers, weather, class sprites, hero
+  portraits, battle actions and stat labels, so they are **replaced**, not
+  deleted. `src/components/game/icons.tsx` holds the replacement set: 16x16
+  inline SVG in currentColor, so the marks take the theme and sit with the
+  pixel type. The game layer now stores icon NAMES and only the interface knows
+  what a name looks like.
+- **Kept:** monochrome typographic marks that render as text, currently the
+  star, the tick, the play triangle, the lozenge and the middle dot. They are
+  punctuation, not pictures.
+- **Cut:** the em-dash, replaced with the punctuation a human editor would
+  choose, varied by sentence. The prose is not otherwise rewritten. Word choice,
+  sentence length and meaning are untouched.
+
+## 12. The tileset question gets answered by measurement
+
+**Ruled 2026-08-31**, Claude's call under ruling 8's dependency.
+
+Whether AI tooling can produce a usable tileset is the real gate on zone
+movement, and it is not a matter of opinion. There is now a commissioning brief
+(`docs/ART-BRIEF-tileset.md`) and a gate that measures candidate tiles
+(`scripts/tileset-gate.mjs`) for edge wrap error, consistent dimensions and
+palette drift, with a negative control.
+
+Six tiles is enough to find out: grass, dirt path, stone, water, wall, roof.
+
 ---
 
 ## Open questions, not yet ruled
 
 These are asked as they become load-bearing, not all at once.
 
-1. **Em-dashes and emoji in player-facing text.** The lore prose uses 45
-   em-dashes and reads well. The interface uses emoji as heraldry and icons.
-   Henry's global house style rejects both as machine-looking. The lint gate
-   currently reports these as warnings and blocks nothing, and no prose has
-   been rewritten. Ruling needed before anyone touches it.
-2. **Does local standing drift toward house standing?** See ruling 6.
-3. **Is honour one axis or several traits?** See ruling 4.
-4. **What does a house forgiveness event look like?** Ruling 5 says they exist.
+1. **Does local standing drift toward house standing?** See ruling 6.
+2. **Is honour one axis or several traits?** See ruling 4.
+3. **What does a house forgiveness event look like?** Ruling 5 says they exist.
    Nobody has said what earns one.
-5. **Repo formatting.** Prettier would rewrite 50 files, most untouched by this
+4. **Repo formatting.** Prettier would rewrite 50 files, most untouched by this
    work. Running it would collide with whatever Lovable generates next. Needs a
    decision about when, ideally at a moment when Danny is not mid-build.
+5. **Do the heraldic marks need real art eventually?** The six house devices are
+   geometric SVG. They read cleanly and cost nothing, but a drawn charge per
+   house would carry more of the world. Not urgent.

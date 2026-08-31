@@ -33,7 +33,7 @@ export const BEATS: StoryBeat[] = [
         flags: { saw_pact_orders: true },
         npc: [{ npcId: "bram_carter", affinity: -10 }],
         outcome:
-          "They are not robbing him. They are searching for a courier's satchel. You memorise the name on the orders — Captain Maud Kell — and Bram limps away without ever seeing you.",
+          "They are not robbing him. They are searching for a courier's satchel. You memorise the name on the orders (Captain Maud Kell) and Bram limps away without ever seeing you.",
       },
       {
         id: "join",
@@ -68,7 +68,7 @@ export const BEATS: StoryBeat[] = [
         npc: [{ npcId: "osrick_quill", affinity: 20 }, { npcId: "lord_corvane", affinity: 15 }],
         renown: 8,
         outcome:
-          "Corvane reads it twice, then a third time, then pours you a drink he clearly regrets opening. The realm now knows who paid for whose loyalty — and Goldmere knows exactly who told them.",
+          "Corvane reads it twice, then a third time, then pours you a drink he clearly regrets opening. The realm now knows who paid for whose loyalty. And Goldmere knows exactly who told them.",
       },
       {
         id: "sell",
@@ -100,7 +100,7 @@ export const BEATS: StoryBeat[] = [
     location: "millford",
     available: (s) => s.beatIndex === 2,
     intro: () =>
-      "Ash Company outriders are firing the granaries at Millford — not for plunder, but so that Ravensfell's levies starve before the muster. A Pact sergeant is directing it off a wax tablet, like a man ticking off errands.",
+      "Ash Company outriders are firing the granaries at Millford, not for plunder, but so that Ravensfell's levies starve before the muster. A Pact sergeant is directing it off a wax tablet, like a man ticking off errands.",
     battle: { title: "The Burning of Millford", enemyIds: ["pact_hammer", "ash_crossbow", "pact_pikeman"] },
     choices: [
       {
@@ -140,7 +140,7 @@ export const BEATS: StoryBeat[] = [
     location: null,
     available: (s) => s.beatIndex === 3,
     intro: (s) =>
-      `Three letters arrive in the same week. Lord Corvane summons you to the loyalist muster. Corvus Draeven invites you to dinner — "no oaths required, only appetite." And the Reeve's Council offers you a charter of your own, if you can hold land long enough to sign it.${
+      `Three letters arrive in the same week. Lord Corvane summons you to the loyalist muster. Corvus Draeven invites you to dinner: "no oaths required, only appetite." And the Reeve's Council offers you a charter of your own, if you can hold land long enough to sign it.${
         s.marriedTo ? ` Your marriage into ${FACTIONS[s.npcs[s.marriedTo] ? (Object.values(FACTIONS).find((x) => x.lordId)?.id ?? "ravensfell") : "ravensfell"].name} is mentioned in all three, in three different tones.` : ""
       }`,
     choices: [
@@ -193,7 +193,7 @@ export const BEATS: StoryBeat[] = [
     available: (s) => s.beatIndex === 4,
     intro: (s) =>
       s.branch === "usurper"
-        ? "Maud Kell has begun quietly refusing orders — sparing villages the Hammer marked for burning. Draeven asks you, pleasantly, over wine, to correct her."
+        ? "Maud Kell has begun quietly refusing orders, sparing villages the Hammer marked for burning. Draeven asks you, pleasantly, over wine, to correct her."
         : "Maud Kell's Ash Company has the road, the high ground, and a professional's contempt for amateurs with banners. She offers terms before she offers battle.",
     battle: { title: "Maud Kell's Stand", enemyIds: ["boss_maud", "ash_crossbow", "pact_pikeman"], boss: "boss_maud" },
     choices: [
@@ -379,7 +379,7 @@ export const ENDINGS: EndingDef[] = [
           : "With Corvane dead, the council rules in his name and quotes him constantly."
       } ${
         s.marriedTo ? `Your marriage binds the settlement together in a way no oath could.` : `You are offered a seat on the council and a title you didn't ask for.`
-      } ${friendlyFactions(s)} of the six powers count you a friend, and ${warCount(s)} wars still smoulder at the borders — a realm made whole, not a realm made quiet.`,
+      } ${friendlyFactions(s)} of the six powers count you a friend, and ${warCount(s)} wars still smoulder at the borders: a realm made whole, not a realm made quiet.`,
   },
   {
     id: "hollow_crown",
