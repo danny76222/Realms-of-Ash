@@ -1,6 +1,15 @@
 import { BACKGROUNDS, CLASSES, ITEMS } from "./data";
 import { SAVE_VERSION, makeUnit, pick, rnd, unitStats, xpForLevel } from "./engine";
 import { Rng, draw } from "./rng";
+import {
+  REPUTATION,
+  bleedFactor,
+  clamp,
+  houseAttention,
+  houseOfPlace,
+  roadDanger,
+  standingIn,
+} from "./reputation";
 import { FACTIONS, FACTION_IDS, LOCATIONS, NPCS, relKey } from "./world";
 import { timeOfDay, weatherAt } from "./weather";
 import type {
@@ -93,7 +102,9 @@ export function newGame(opts: {
     day: 1,
     hour: 8,
     gold: bg.gold,
-    renown: bg.renown,
+    fame: bg.fame,
+    honour: 0,
+    standing: {},
     locationId: "oakhollow",
     party: [hero],
     inventory: { poultice: 2 },
@@ -140,14 +151,45 @@ export function setFlags(
   return { ...state, storyFlags: { ...state.storyFlags, ...flags } };
 }
 
+/**
+ * Move standing with one house, and let it carry to the others.
+ *
+ * Step 2 of the build order. Six independent numbers are bookkeeping; six that
+ * trade against each other are politics. Helping a house costs you with whoever
+ * they are at war with and earns a little with their allies, so there is no
+ * such thing as a free favour once the realm is at war with itself.
+ */
 export function shiftRep(state: GameState, faction: FactionId, amount: number): GameState {
-  const f = state.factions[faction];
+  const factions = { ...state.factions };
+  factions[faction] = {
+    ...factions[faction],
+    rep: clamp(factions[faction].rep + amount),
+  };
+
+  for (const other of FACTION_IDS) {
+    if (other === faction) continue;
+    const carried = amount * bleedFactor(relationOf(state, faction, other));
+    if (carried === 0) continue;
+    factions[other] = { ...factions[other], rep: clamp(factions[other].rep + carried) };
+  }
+
+  return { ...state, factions };
+}
+
+/** Fame never falls below zero: an infamous hero is famous, not unknown. */
+export function shiftFame(state: GameState, amount: number): GameState {
+  return { ...state, fame: clamp(state.fame + amount, REPUTATION.fame.min, REPUTATION.max) };
+}
+
+export function shiftHonour(state: GameState, amount: number): GameState {
+  return { ...state, honour: clamp(state.honour + amount) };
+}
+
+/** Ruling 6: standing in one PLACE. This is the tier a zone will read. */
+export function shiftStanding(state: GameState, locationId: string, amount: number): GameState {
   return {
     ...state,
-    factions: {
-      ...state.factions,
-      [faction]: { ...f, rep: Math.max(-100, Math.min(100, f.rep + amount)) },
-    },
+    standing: { ...state.standing, [locationId]: clamp(standingIn(state, locationId) + amount) },
   };
 }
 
@@ -275,8 +317,14 @@ export function travelTo(
     }
   }
 
+  // Who you are changes the road. A known purse is worth taking, a blackened
+  // name has made enemies, and a place that thinks well of you watches its
+  // own roads. See REPUTATION.road.
   const base = dest.kind === "castle" ? 0.1 : dest.kind === "village" ? 0.24 : 0.36;
-  const danger = Math.min(0.75, base * sky.ambushMul * light.ambushMul);
+  const danger = Math.max(
+    0.02,
+    Math.min(0.75, base * sky.ambushMul * light.ambushMul + roadDanger(s, destId)),
+  );
   if (r.chance(danger)) {
     const level = partyLevel(s);
     const pool: string[][] = [
@@ -298,17 +346,148 @@ function addEvent(state: GameState, ev: WorldEvent): GameState {
   return { ...state, worldEvents: [ev, ...state.worldEvents].slice(0, 40) };
 }
 
+/**
+ * Ruling 5: houses and places forgive, slowly, on their own.
+ *
+ * A grudge is a wound rather than a sentence. Both tiers walk one point back
+ * toward neutral on their own clock, the court faster than the village,
+ * because people live in the village.
+ */
+function forgive(state: GameState): GameState {
+  const d = REPUTATION.decay;
+  let s = state;
+
+  if (s.day % d.houseEveryDays === 0) {
+    const factions = { ...s.factions };
+    for (const id of FACTION_IDS) {
+      const rep = factions[id].rep;
+      if (Math.abs(rep - d.restingPoint) < d.floor) continue;
+      factions[id] = { ...factions[id], rep: rep + (rep > d.restingPoint ? -1 : 1) };
+    }
+    s = { ...s, factions };
+  }
+
+  if (s.day % d.placeEveryDays === 0) {
+    const standing = { ...s.standing };
+    for (const [place, value] of Object.entries(standing)) {
+      if (Math.abs(value - d.restingPoint) < d.floor) {
+        delete standing[place];
+        continue;
+      }
+      standing[place] = value + (value > d.restingPoint ? -1 : 1);
+    }
+    s = { ...s, standing };
+  }
+
+  return s;
+}
+
+/**
+ * An event aimed at the player rather than between two houses.
+ *
+ * Step 3 of the build order, and the point where standing stops being
+ * bookkeeping and starts being something the world does to you. Each one reads
+ * the ledger and writes back to it, so being noticed has consequences of its
+ * own.
+ */
+function playerEvent(s: GameState, r: Rng): GameState {
+  const here = s.locationId;
+  const house = houseOfPlace(s, here);
+  const placeName = LOCATIONS[here]?.name ?? "the road";
+  const worst = [...FACTION_IDS].sort((x, y) => s.factions[x].rep - s.factions[y].rep)[0]!;
+  const best = [...FACTION_IDS].sort((x, y) => s.factions[y].rep - s.factions[x].rep)[0]!;
+
+  // Every event the ledger currently earns you, gathered before one is chosen.
+  // An earlier version returned at the first match, which meant a famous and
+  // dishonourable player drew bounties and NOTHING ELSE ever fired. The gate
+  // caught it; see LESSONS.md.
+  const candidates: ((g: GameState) => GameState)[] = [];
+
+  if (
+    s.fame >= REPUTATION.fame.known &&
+    s.honour <= REPUTATION.honour.stained &&
+    s.factions[worst].rep < -20
+  ) {
+    const purse = 40 + Math.round(s.fame * 2);
+    candidates.push((g) =>
+      addEvent(shiftStanding(g, here, -3), {
+        day: g.day,
+        kind: "bounty",
+        aboutYou: true,
+        text: `${FACTIONS[worst].name} post a purse of ${purse} for word of your movements. The roads will be worse for a while.`,
+      }),
+    );
+  }
+
+  if (s.factions[best].rep >= 35) {
+    const gift = 30 + Math.round(s.factions[best].rep);
+    candidates.push((g) =>
+      addEvent(shiftFame({ ...g, gold: g.gold + gift }, 1), {
+        day: g.day,
+        kind: "offer",
+        aboutYou: true,
+        text: `A rider from ${FACTIONS[best].name} finds you at ${placeName} with ${gift} gold and no conditions worth the name.`,
+      }),
+    );
+  }
+
+  if (house && s.factions[house].rep <= -25) {
+    candidates.push((g) =>
+      addEvent(shiftStanding(g, here, -4), {
+        day: g.day,
+        kind: "shunned",
+        aboutYou: true,
+        text: `The gate at ${placeName} is barred to you. ${FACTIONS[house].name} have made their feeling known here.`,
+      }),
+    );
+  }
+
+  if (standingIn(s, here) >= 30) {
+    candidates.push((g) =>
+      addEvent(shiftFame(g, 1), {
+        day: g.day,
+        kind: "welcome",
+        aboutYou: true,
+        text: `${placeName} keeps a bed and a meal for you without being asked. Word of it travels.`,
+      }),
+    );
+  }
+
+  if (candidates.length === 0) return s;
+  return pick(r, candidates)(s);
+}
+
+/**
+ * Step 1 of the build order: the world reads the ledger.
+ *
+ * This used to roll a flat 0.34 and pick two houses at random, so the realm was
+ * a weather system running in a different building. It now reads three things
+ * it previously ignored: fame decides how often anything happens at all, house
+ * standing decides WHICH houses it happens to, and where the player is standing
+ * pulls events toward them.
+ */
 export function simulateWorldDay(state: GameState): GameState {
   const r = Rng.restore(state.rng);
-  let s: GameState = { ...state, rng: r.save() };
+  let s: GameState = forgive({ ...state, rng: r.save() });
   const seal = (x: GameState): GameState => ({ ...x, rng: r.save() });
-  if (r.next() > 0.34) return seal(s);
 
-  const a = pick(r, FACTION_IDS);
-  const b = pick(
-    r,
-    FACTION_IDS.filter((f) => f !== a),
-  );
+  const e = REPUTATION.events;
+  // An unknown hedge knight lives in a quiet world. A famous one does not get
+  // quiet days.
+  const chance = e.baseChance + (s.fame / REPUTATION.max) * e.fameLift;
+  if (r.next() > chance) return seal(s);
+
+  if (r.chance(e.aimedAtPlayerChance)) return seal(playerEvent(s, r));
+
+  // Houses you have offended appear in your world far more than houses you
+  // have never met, and the ground you are standing on pulls events toward it.
+  const hereHouse = houseOfPlace(s, s.locationId);
+  const weightOf = (id: FactionId): number =>
+    houseAttention(s.factions[id].rep) * (id === hereHouse ? e.hereMultiplier : 1);
+
+  const a = r.weighted(FACTION_IDS, FACTION_IDS.map(weightOf));
+  const rest = FACTION_IDS.filter((f) => f !== a);
+  const b = r.weighted(rest, rest.map(weightOf));
   const rel = relationOf(s, a, b);
   const A = FACTIONS[a].name;
   const B = FACTIONS[b].name;

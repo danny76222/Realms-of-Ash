@@ -3,7 +3,7 @@ import { ENEMIES } from "./enemies";
 import { Rng, type RngState } from "./rng";
 import type { Battle, ClassId, Combatant, GameState, Skill, Unit, UnitStats } from "./types";
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 /**
  * These used to draw from Math.random, which meant GameState.seed described

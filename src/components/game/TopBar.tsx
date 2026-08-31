@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Icon } from "./icons";
+import { fameTier, honourTier } from "@/game/reputation";
 import { useGame } from "@/game/store";
 import { FACTIONS, FACTION_IDS, LOCATIONS, LOCATION_IDS, NPCS } from "@/game/world";
 import { relationOf } from "@/game/state";
@@ -110,7 +111,16 @@ export function TopBar() {
               title={`${weatherOf(game).name}: ${weatherOf(game).line}`}
             />
             <Plate icon={GLYPH.gold} value={game.gold} title="Gold in purse" />
-            <Plate icon={GLYPH.renown} value={game.renown} title="Renown across the realm" />
+            <Plate
+              icon={GLYPH.renown}
+              value={game.fame}
+              title={`Fame: how big your name is (${fameTier(game.fame)})`}
+            />
+            <Plate
+              icon="honour"
+              value={game.honour}
+              title={`Honour: what colour that name is (${honourTier(game.honour)})`}
+            />
             {game.branch ? (
               <Plate icon="branch" value={game.branch} title="Story branch you are walking" />
             ) : null}

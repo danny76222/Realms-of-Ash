@@ -477,7 +477,7 @@ export function LocationScreen() {
                             >
                               {canPropose(game, id)
                                 ? "Propose marriage"
-                                : `Propose (regard ${st.affinity}/60, renown ${game.renown}/30)`}
+                                : `Propose (regard ${st.affinity}/60, fame ${game.fame}/30)`}
                             </PixelButton>
                           ) : null}
                         </div>
@@ -510,7 +510,7 @@ export function LocationScreen() {
                         <span className="pixel-font text-[10px] text-primary">{q.name}</span>
                         <span className="block text-sm text-muted-foreground">
                           {q.desc} → {LOCATIONS[q.target]?.name}. {q.rewardGold} gold,{" "}
-                          {q.rewardRenown} renown.
+                          {q.rewardFame} fame.
                         </span>
                       </span>
                       {done ? (

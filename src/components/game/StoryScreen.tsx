@@ -42,10 +42,10 @@ function choiceHints(c: StoryChoice): { tone: "good" | "bad" | "warn"; text: str
   }
   if (c.gold)
     out.push({ tone: c.gold > 0 ? "good" : "bad", text: `${c.gold > 0 ? "+" : ""}${c.gold} gold` });
-  if (c.renown)
+  if (c.fame)
     out.push({
-      tone: c.renown > 0 ? "good" : "bad",
-      text: `${c.renown > 0 ? "+" : ""}${c.renown} renown`,
+      tone: c.fame > 0 ? "good" : "bad",
+      text: `${c.fame > 0 ? "+" : ""}${c.fame} fame`,
     });
   return out;
 }

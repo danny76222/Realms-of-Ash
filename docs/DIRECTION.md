@@ -183,16 +183,57 @@ Two things worth keeping, since they took a while to establish:
   repo.** Until the GitHub connection exists, pressing it publishes the game as
   it was before any of this work. Nobody should reach for it as a shortcut.
 
+## 14. Steps 1 to 3 are built, and measured
+
+**Built 2026-08-31.** Rulings 1, 4, 5 and 6 are now in the code rather than in
+this document.
+
+- **Fame and honour are separate numbers** (ruling 4). `GameState.renown` is
+  gone. Save version 6, with a real migration that carries old renown into fame
+  rather than refusing the save.
+- **Standing is per place** (ruling 6), `GameState.standing`, keyed by location.
+  Quests pay into it, and the road reads it.
+- **House standing trades** (step 2). `shiftRep` now carries a shift to houses
+  at war with or allied to the one you moved, so there is no free favour.
+- **The world reads the ledger** (step 1). `simulateWorldDay` weights how often
+  anything happens by fame, which houses it happens to by how badly you have
+  offended them, and pulls events toward the ground you are standing on.
+- **Houses and places forgive** (ruling 5), one point at a time, the court
+  faster than the village.
+- **Events aimed at the player** (step 3): bounty, offer, shunned, welcome.
+
+Every number the system reads lives in `src/game/reputation.ts` and nowhere
+else, so it is tuned in one place.
+
+Measured by `bun run gate:reputation`, which is the point. The claim
+"reputation drives events" is worth nothing until something checks it:
+
+- Offending a house makes it appear **2.74x** more often in your world, and the
+  effect held on **8 of 8** seeds.
+- A famous player gets 266 events where an unknown gets 161.
+- All four player-aimed kinds fire, each for the life that earns it.
+
+The control runs both arms identically and must report no effect, so a reported
+effect is real rather than noise.
+
 ---
 
 ## Open questions, not yet ruled
 
 These are asked as they become load-bearing, not all at once.
 
-1. **Does local standing drift toward house standing?** See ruling 6.
-2. **Is honour one axis or several traits?** See ruling 4.
-3. **What does a house forgiveness event look like?** Ruling 5 says they exist.
-   Nobody has said what earns one.
+1. **Does local standing drift toward house standing?** See ruling 6. Built as
+   fully independent for now: a village can hate you while its house does not.
+   Cheap to change, and worth playing before deciding.
+2. **Is honour one axis or several traits?** See ruling 4. Built as one axis.
+   Honour currently moves from quests and, where a choice does not author a
+   value, is derived from unambiguous acts: killing a named person costs 8.
+   Most story choices still carry no authored honour value, so honour moves
+   less than fame does. Authoring those is real work and wants a view on what
+   each choice means.
+3. **What does a house forgiveness event look like?** Ruling 5 gave houses a
+   slow decay toward neutral, which is built. The *event* half is not: nothing
+   yet lets you earn forgiveness deliberately.
 4. **Repo formatting.** Prettier would rewrite 50 files, most untouched by this
    work. Running it would collide with whatever Lovable generates next. Needs a
    decision about when, ideally at a moment when Danny is not mid-build.

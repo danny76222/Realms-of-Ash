@@ -1,5 +1,6 @@
 import { pick, rnd } from "./engine";
 import { Rng, draw, hashSeed } from "./rng";
+import { REPUTATION, clamp } from "./reputation";
 import { DUNGEON_BOSSES, DUNGEON_POOLS, ENEMIES } from "./enemies";
 import { ITEMS } from "./data";
 import { FACTIONS, LOCATIONS, NPCS } from "./world";
@@ -13,6 +14,9 @@ import {
   setRelation,
   shiftAffinity,
   shiftRep,
+  shiftFame,
+  shiftHonour,
+  shiftStanding,
 } from "./state";
 import type {
   FactionId,
@@ -30,7 +34,12 @@ export function applyChoice(state: GameState, beat: StoryBeat, choice: StoryChoi
   if (choice.flags) s = setFlags(s, choice.flags);
   if (choice.branch) s = { ...s, branch: choice.branch };
   if (choice.gold) s = { ...s, gold: s.gold + choice.gold };
-  if (choice.renown) s = { ...s, renown: s.renown + choice.renown };
+  if (choice.fame) s = shiftFame(s, choice.fame);
+  // Honour is authored where the writer has a view, and derived where the act
+  // speaks for itself. Killing a named person is not ambiguous.
+  const kills = (choice.npc ?? []).filter((n) => n.kill).length;
+  const honour = choice.honour ?? kills * REPUTATION.award.killHonour;
+  if (honour) s = shiftHonour(s, honour);
   for (const [fid, amount] of Object.entries(choice.rep ?? {})) {
     s = shiftRep(s, fid as FactionId, amount as number);
   }
@@ -166,7 +175,7 @@ export function generateSideQuests(s: GameState, locationId: string): SideQuest[
       need: kind === "escort" ? 2 : 1,
       desc: DESCS[kind],
       rewardGold: Math.round(60 + lvl * 28 + (n % 40)),
-      rewardRenown: 2 + (n % 3),
+      rewardFame: 2 + (n % 3),
       repShift: 3 + (n % 4),
       ...(loc.npcs?.[0] ? { npcShift: { npcId: loc.npcs[0]!, amount: 5 } } : {}),
     });
@@ -190,11 +199,15 @@ export function completeQuest(s: GameState, q: SideQuest): GameState {
   let out: GameState = {
     ...s,
     gold: s.gold + q.rewardGold,
-    renown: s.renown + q.rewardRenown,
+    fame: clamp(s.fame + q.rewardFame),
+    honour: clamp(s.honour + REPUTATION.award.questHonour),
     activeSide: s.activeSide.filter((id) => id !== q.id),
     quests: { ...s.quests, [q.id]: { status: "done", progress: 0 } },
   };
   if (q.faction && q.repShift) out = shiftRep(out, q.faction, q.repShift);
+  // Ruling 6: work done for a place is remembered by that place, separately
+  // from what its house thinks of you.
+  out = shiftStanding(out, q.target, REPUTATION.award.questLocalStanding);
   if (q.npcShift) out = shiftAffinity(out, q.npcShift.npcId, q.npcShift.amount);
   // side work occasionally moves the world
   if (q.faction) {
@@ -213,7 +226,7 @@ export function completeQuest(s: GameState, q: SideQuest): GameState {
       );
     }
   }
-  return pushLog(out, `Completed: ${q.name}. +${q.rewardGold} gold, +${q.rewardRenown} renown.`);
+  return pushLog(out, `Completed: ${q.name}. +${q.rewardGold} gold, +${q.rewardFame} fame.`);
 }
 
 export function questEnemies(q: SideQuest, level: number): string[] {
@@ -304,7 +317,7 @@ export function finishDungeon(
   let out: GameState = {
     ...s,
     gold: s.gold + gold,
-    renown: s.renown + 4,
+    fame: clamp(s.fame + 4),
     clearedDungeons: s.clearedDungeons.includes(locationId)
       ? s.clearedDungeons
       : [...s.clearedDungeons, locationId],
@@ -337,7 +350,7 @@ export function canPropose(s: GameState, npcId: string): boolean {
   const npc = NPCS[npcId];
   const st = s.npcs[npcId];
   if (!npc?.eligible || !st?.alive || s.marriedTo) return false;
-  return st.affinity >= 60 && s.renown >= 30;
+  return st.affinity >= 60 && s.fame >= 30;
 }
 
 export function marry(s: GameState, npcId: string): GameState {
@@ -354,7 +367,7 @@ export function marry(s: GameState, npcId: string): GameState {
         affinity: Math.min(100, s.npcs[npcId]!.affinity + 15),
       },
     },
-    renown: s.renown + 15,
+    fame: clamp(s.fame + 15),
   };
   out = setFlags(out, { married: true, [`married_${npcId}`]: true });
   if (npc.faction) {

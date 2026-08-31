@@ -12,8 +12,10 @@
     "format": "prettier --write .",
     "gate:determinism": "bun scripts/determinism.ts",
     "gate:determinism:prove": "bun scripts/determinism.ts --prove",
-    "gates": "bun run gate:lint && bun run gate:determinism",
-    "gate:lint": "node scripts/gate-lint.mjs"
+    "gates": "bun run gate:lint && bun run gate:determinism && bun run gate:reputation",
+    "gate:lint": "node scripts/gate-lint.mjs",
+    "gate:reputation": "bun scripts/reputation.ts",
+    "gate:reputation:prove": "bun scripts/reputation.ts --prove"
   },
   "overrides": {
     "rolldown": "1.2.1"

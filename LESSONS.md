@@ -105,3 +105,31 @@ check this first:
 ```sh
 grep -c "lovable-core-prod" bun.lock   # must be 0
 ```
+
+## One player-aimed event starved the other three
+
+**2026-08-31.** `playerEvent` picked what the world does to you with a chain of
+early returns, so the FIRST condition that matched always won. A famous and
+dishonourable player matched `bounty` immediately and therefore drew bounties
+and nothing else, for the whole campaign. `offer`, `shunned` and `welcome` were
+written, wired, reachable in principle, and dead in practice.
+
+The R3 gate caught it on its first run, and only because it printed the KINDS
+it saw rather than a count. A count would have read 186 events and looked
+healthy.
+
+Fixed by gathering every event the ledger currently earns and picking among
+them, so eligibility competes instead of racing.
+
+Two things now guard it, both from Isles:
+- The gate sweeps four different player profiles, not one. A single profile
+  only ever earns one kind of attention, which is how the first version of the
+  gate missed this.
+- Every declared kind must actually fire somewhere in the sweep, or the gate
+  fails by name (Isles G32). Content that never appears is dead code wearing a
+  costume.
+
+**Generalise this.** A first-match chain over conditions that overlap is a
+starvation bug waiting to happen, and it never announces itself: the feature
+works, the tests pass, and three quarters of the content silently never ships.
+Measure coverage of kinds, not volume of output.

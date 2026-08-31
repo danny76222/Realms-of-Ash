@@ -122,7 +122,7 @@ export function CreateHero() {
               <Icon name="gold" /> Gold {bg.gold}
             </li>
             <li>
-              <Icon name="renown" /> Renown {bg.renown}
+              <Icon name="renown" /> Fame {bg.fame}
             </li>
           </ul>
           <div className="mt-3 flex gap-2">

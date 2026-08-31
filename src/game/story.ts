@@ -22,7 +22,7 @@ export const BEATS: StoryBeat[] = [
         flags: { helped_bram: true },
         npc: [{ npcId: "bram_carter", affinity: 25 }],
         rep: { ironpact: -5, ravensfell: 4 },
-        renown: 3,
+        fame: 3,
         outcome:
           "The Pact men leave at a run. Bram, bleeding from the ear, insists on giving you half a cheese and his eternal friendship. You accept both.",
       },
@@ -56,7 +56,9 @@ export const BEATS: StoryBeat[] = [
     available: (s) => s.beatIndex === 1,
     intro: (s) =>
       `Osrick Quill has receipts: three years of Iron Pact silver paid into ${FACTIONS.goldmere.name} and ${FACTIONS.thornwold.name} pockets. "Lord Draeven didn't take the realm," he whispers. "He bought it on credit."${
-        f(s, "pact_contact") ? " He also knows you've been seen taking Pact coin, and he is very nervous about it." : ""
+        f(s, "pact_contact")
+          ? " He also knows you've been seen taking Pact coin, and he is very nervous about it."
+          : ""
       }`,
     choices: [
       {
@@ -65,8 +67,11 @@ export const BEATS: StoryBeat[] = [
         detail: "Put it in the Old Raven's hands and let the realm see the debt.",
         flags: { ledger_exposed: true, draeven_checked: true },
         rep: { ravensfell: 12, goldmere: -8, ironpact: -12 },
-        npc: [{ npcId: "osrick_quill", affinity: 20 }, { npcId: "lord_corvane", affinity: 15 }],
-        renown: 8,
+        npc: [
+          { npcId: "osrick_quill", affinity: 20 },
+          { npcId: "lord_corvane", affinity: 15 },
+        ],
+        fame: 8,
         outcome:
           "Corvane reads it twice, then a third time, then pours you a drink he clearly regrets opening. The realm now knows who paid for whose loyalty. And Goldmere knows exactly who told them.",
       },
@@ -76,7 +81,10 @@ export const BEATS: StoryBeat[] = [
         detail: "A fortune, and a clerk who becomes an inconvenience.",
         flags: { ledger_sold: true },
         rep: { ironpact: 15, freeholds: -10, ravensfell: -8 },
-        npc: [{ npcId: "osrick_quill", affinity: -60, kill: true }, { npcId: "captain_maud", affinity: 15 }],
+        npc: [
+          { npcId: "osrick_quill", affinity: -60, kill: true },
+          { npcId: "captain_maud", affinity: 15 },
+        ],
         gold: 500,
         outcome:
           "The Fen Widow pays in full, compliments your handwriting, and asks where the clerk sleeps. You tell her. Osrick is found in the millrace two days later, still holding a receipt.",
@@ -87,7 +95,7 @@ export const BEATS: StoryBeat[] = [
         detail: "Leverage is worth more than either payment.",
         flags: { ledger_kept: true },
         npc: [{ npcId: "osrick_quill", affinity: 10, recruit: false }],
-        renown: 4,
+        fame: 4,
         outcome:
           "Osrick copies it out for you in a hand so neat it's insulting, and asks only that you use it on someone who deserves it. You now own the debts of half the realm's nobility.",
       },
@@ -101,7 +109,10 @@ export const BEATS: StoryBeat[] = [
     available: (s) => s.beatIndex === 2,
     intro: () =>
       "Ash Company outriders are firing the granaries at Millford, not for plunder, but so that Ravensfell's levies starve before the muster. A Pact sergeant is directing it off a wax tablet, like a man ticking off errands.",
-    battle: { title: "The Burning of Millford", enemyIds: ["pact_hammer", "ash_crossbow", "pact_pikeman"] },
+    battle: {
+      title: "The Burning of Millford",
+      enemyIds: ["pact_hammer", "ash_crossbow", "pact_pikeman"],
+    },
     choices: [
       {
         id: "save_grain",
@@ -109,8 +120,9 @@ export const BEATS: StoryBeat[] = [
         detail: "Feed the levies, even if the raiders escape.",
         flags: { millford_saved: true },
         rep: { ravensfell: 10, ironpact: -8 },
-        renown: 6,
-        outcome: "Half the grain survives. Ravensfell's muster will eat this winter, and every village between here and the moors hears who put out the fires.",
+        fame: 6,
+        outcome:
+          "Half the grain survives. Ravensfell's muster will eat this winter, and every village between here and the moors hears who put out the fires.",
       },
       {
         id: "chase",
@@ -118,7 +130,7 @@ export const BEATS: StoryBeat[] = [
         detail: "Take the wax tablet. Let the grain burn.",
         flags: { has_pact_orders: true },
         rep: { ironpact: -6 },
-        renown: 3,
+        fame: 3,
         outcome:
           "You take the tablet off his body: a full raid schedule signed by Maud Kell, and beneath it a second seal you don't recognise yet. Millford eats ash this winter.",
       },
@@ -129,7 +141,8 @@ export const BEATS: StoryBeat[] = [
         flags: { looted_millford: true },
         rep: { ravensfell: -12, freeholds: -8 },
         gold: 350,
-        outcome: "Three hundred and fifty in mixed coin, and a reputation you'll be explaining for the rest of the war.",
+        outcome:
+          "Three hundred and fifty in mixed coin, and a reputation you'll be explaining for the rest of the war.",
       },
     ],
   },
@@ -141,7 +154,9 @@ export const BEATS: StoryBeat[] = [
     available: (s) => s.beatIndex === 3,
     intro: (s) =>
       `Three letters arrive in the same week. Lord Corvane summons you to the loyalist muster. Corvus Draeven invites you to dinner: "no oaths required, only appetite." And the Reeve's Council offers you a charter of your own, if you can hold land long enough to sign it.${
-        s.marriedTo ? ` Your marriage into ${FACTIONS[s.npcs[s.marriedTo] ? (Object.values(FACTIONS).find((x) => x.lordId)?.id ?? "ravensfell") : "ravensfell"].name} is mentioned in all three, in three different tones.` : ""
+        s.marriedTo
+          ? ` Your marriage into ${FACTIONS[s.npcs[s.marriedTo] ? (Object.values(FACTIONS).find((x) => x.lordId)?.id ?? "ravensfell") : "ravensfell"].name} is mentioned in all three, in three different tones.`
+          : ""
       }`,
     choices: [
       {
@@ -156,8 +171,9 @@ export const BEATS: StoryBeat[] = [
           { a: "ravensfell", b: "ironpact", kind: "war" },
         ],
         npc: [{ npcId: "lord_corvane", affinity: 20 }],
-        renown: 12,
-        outcome: "You take the loyalist banner at the muster field. Corvane's captains cheer. Corvane himself looks like a man handing over a debt.",
+        fame: 12,
+        outcome:
+          "You take the loyalist banner at the muster field. Corvane's captains cheer. Corvane himself looks like a man handing over a debt.",
       },
       {
         id: "usurper",
@@ -166,9 +182,12 @@ export const BEATS: StoryBeat[] = [
         branch: "usurper",
         flags: { branch_locked: true, dined_with_draeven: true },
         rep: { ironpact: 25, ravensfell: -20, sunmarch: -12 },
-        npc: [{ npcId: "lord_draeven", affinity: 20 }, { npcId: "captain_maud", affinity: 10 }],
+        npc: [
+          { npcId: "lord_draeven", affinity: 20 },
+          { npcId: "captain_maud", affinity: 10 },
+        ],
         gold: 400,
-        renown: 6,
+        fame: 6,
         outcome:
           "Dinner is excellent. Draeven talks for two hours about drainage, granaries and standing courts, and never once about crowns. By the pudding you realise the most frightening thing about him: he means it.",
       },
@@ -179,7 +198,7 @@ export const BEATS: StoryBeat[] = [
         branch: "independent",
         flags: { branch_locked: true, own_banner: true },
         rep: { freeholds: 15, ravensfell: -8, ironpact: -8 },
-        renown: 10,
+        fame: 10,
         outcome:
           "You hang your own colours over a border tower nobody has bothered to garrison in ten years. Within a month, two hundred people who like the idea of no lord at all are living under it.",
       },
@@ -195,7 +214,11 @@ export const BEATS: StoryBeat[] = [
       s.branch === "usurper"
         ? "Maud Kell has begun quietly refusing orders, sparing villages the Hammer marked for burning. Draeven asks you, pleasantly, over wine, to correct her."
         : "Maud Kell's Ash Company has the road, the high ground, and a professional's contempt for amateurs with banners. She offers terms before she offers battle.",
-    battle: { title: "Maud Kell's Stand", enemyIds: ["boss_maud", "ash_crossbow", "pact_pikeman"], boss: "boss_maud" },
+    battle: {
+      title: "Maud Kell's Stand",
+      enemyIds: ["boss_maud", "ash_crossbow", "pact_pikeman"],
+      boss: "boss_maud",
+    },
     choices: [
       {
         id: "spare",
@@ -205,17 +228,21 @@ export const BEATS: StoryBeat[] = [
         npc: [{ npcId: "captain_maud", affinity: 35, recruit: true }],
         rep: { ironpact: -6 },
         outcome:
-          "Maud wipes her blade, looks at the field, and says, \"Fine. But I pick our ground from now on.\" She means it, and she is usually right.",
+          'Maud wipes her blade, looks at the field, and says, "Fine. But I pick our ground from now on." She means it, and she is usually right.',
       },
       {
         id: "execute",
         label: "Execute her on the field",
         detail: "Make an example the whole realm can read.",
         flags: { maud_dead: true },
-        npc: [{ npcId: "captain_maud", affinity: -100, kill: true }, { npcId: "lord_draeven", affinity: -10 }],
+        npc: [
+          { npcId: "captain_maud", affinity: -100, kill: true },
+          { npcId: "lord_draeven", affinity: -10 },
+        ],
         rep: { ironpact: -12, ravensfell: 6 },
-        renown: 8,
-        outcome: "The Ash Company disbands within a fortnight. So does a good deal of the realm's willingness to surrender to you.",
+        fame: 8,
+        outcome:
+          "The Ash Company disbands within a fortnight. So does a good deal of the realm's willingness to surrender to you.",
       },
       {
         id: "ransom",
@@ -225,7 +252,8 @@ export const BEATS: StoryBeat[] = [
         npc: [{ npcId: "captain_maud", affinity: -20 }],
         gold: 450,
         rep: { goldmere: 6 },
-        outcome: "Four hundred and fifty in Pact silver, and a captain who now knows exactly how you fight.",
+        outcome:
+          "Four hundred and fifty in Pact silver, and a captain who now knows exactly how you fight.",
       },
     ],
   },
@@ -237,38 +265,54 @@ export const BEATS: StoryBeat[] = [
     available: (s) => s.beatIndex === 5,
     intro: (s) =>
       `${alive(s, "the_fen_widow") ? "The Fen Widow" : "One of the Widow's apprentices"} has been moving through the border villages with a list of names. Yours is on it, third from the top, which is either an insult or a promotion.`,
-    battle: { title: "Ambush at the Gallows Oak", enemyIds: ["boss_widow", "ember_shade", "cutpurse"], boss: "boss_widow" },
+    battle: {
+      title: "Ambush at the Gallows Oak",
+      enemyIds: ["boss_widow", "ember_shade", "cutpurse"],
+      boss: "boss_widow",
+    },
     choices: [
       {
         id: "burn_list",
         label: "Burn the list",
         detail: "Nobody else on it needs to die for a war they didn't choose.",
         flags: { list_burned: true },
-        npc: [{ npcId: "the_fen_widow", affinity: -30, kill: true }, { npcId: "sister_dulcie", affinity: 20 }],
-        renown: 10,
+        npc: [
+          { npcId: "the_fen_widow", affinity: -30, kill: true },
+          { npcId: "sister_dulcie", affinity: 20 },
+        ],
+        fame: 10,
         rep: { freeholds: 10, thornwold: 6 },
-        outcome: "Eleven names, most of them millers and priests, go up in a very small fire. Sister Dulcie says a word over it that is not quite a prayer.",
+        outcome:
+          "Eleven names, most of them millers and priests, go up in a very small fire. Sister Dulcie says a word over it that is not quite a prayer.",
       },
       {
         id: "use_list",
         label: "Finish the list yourself",
         detail: "Every name on it is someone's informant.",
         flags: { list_used: true },
-        npc: [{ npcId: "the_fen_widow", affinity: -30, kill: true }, { npcId: "sister_dulcie", affinity: -35 }],
+        npc: [
+          { npcId: "the_fen_widow", affinity: -30, kill: true },
+          { npcId: "sister_dulcie", affinity: -35 },
+        ],
         rep: { ironpact: 8, freeholds: -14, ravensfell: -6 },
         gold: 300,
-        renown: 6,
-        outcome: "The border quiets. It is the particular quiet of people deciding not to speak to you again.",
+        fame: 6,
+        outcome:
+          "The border quiets. It is the particular quiet of people deciding not to speak to you again.",
       },
       {
         id: "warn",
         label: "Warn every name on it",
         detail: "Ride the border for a week and lose the initiative.",
         flags: { list_warned: true },
-        npc: [{ npcId: "the_fen_widow", affinity: -20 }, { npcId: "bram_carter", affinity: 20 }],
+        npc: [
+          { npcId: "the_fen_widow", affinity: -20 },
+          { npcId: "bram_carter", affinity: 20 },
+        ],
         rep: { freeholds: 12, ravensfell: 8, ironpact: -10 },
-        renown: 12,
-        outcome: "Eleven households vanish into the woods before the knives arrive. It costs you a week, and buys you a border that will hide you when you need it.",
+        fame: 12,
+        outcome:
+          "Eleven households vanish into the woods before the knives arrive. It costs you a week, and buys you a border that will hide you when you need it.",
       },
     ],
   },
@@ -282,7 +326,11 @@ export const BEATS: StoryBeat[] = [
       s.branch === "usurper"
         ? "Ironhand thinks Draeven has gone soft, keeping you around. He intends to demonstrate this at length, with a mace."
         : "The Hammer's last lieutenant holds the Black Stair, and beneath it the foundry that arms half the Pact. Take the stair, take the war.",
-    battle: { title: "The Black Stair", enemyIds: ["boss_ironhand", "pact_hammer", "pact_hammer"], boss: "boss_ironhand" },
+    battle: {
+      title: "The Black Stair",
+      enemyIds: ["boss_ironhand", "pact_hammer", "pact_hammer"],
+      boss: "boss_ironhand",
+    },
     choices: [
       {
         id: "break_foundry",
@@ -290,8 +338,9 @@ export const BEATS: StoryBeat[] = [
         detail: "Cripple Pact strength for good.",
         flags: { foundry_broken: true },
         rep: { ironpact: -18, thornwold: 8 },
-        renown: 12,
-        outcome: "The great wheel goes into the shaft. Pact levies will be fighting the rest of this war with their grandfathers' steel.",
+        fame: 12,
+        outcome:
+          "The great wheel goes into the shaft. Pact levies will be fighting the rest of this war with their grandfathers' steel.",
       },
       {
         id: "seize_foundry",
@@ -300,8 +349,9 @@ export const BEATS: StoryBeat[] = [
         flags: { foundry_held: true },
         rep: { goldmere: 10, freeholds: 8 },
         gold: 400,
-        renown: 8,
-        outcome: "You put your own guards on the door and hire back every smith who'll swear. It is the single most valuable thing you have ever owned.",
+        fame: 8,
+        outcome:
+          "You put your own guards on the door and hire back every smith who'll swear. It is the single most valuable thing you have ever owned.",
       },
     ],
   },
@@ -328,26 +378,36 @@ export const BEATS: StoryBeat[] = [
         label: "End it with the sword",
         detail: "No terms, no speeches.",
         flags: { final_kill: true },
-        renown: 25,
-        outcome: "It ends the way these things always end: quickly, and in mud, and with someone's second-best banner over the body.",
+        fame: 25,
+        outcome:
+          "It ends the way these things always end: quickly, and in mud, and with someone's second-best banner over the body.",
       },
       {
         id: "terms",
         label: "Offer terms over the body of the field",
         detail: "A realm needs someone left alive to administer it.",
         flags: { final_terms: true },
-        renown: 18,
+        fame: 18,
         rep: { goldmere: 10, freeholds: 10, sunmarch: 6 },
-        outcome: "Terms are signed on a drumhead in the rain. Half the lords present think you weak. The other half start quietly wondering what you'd want for their charter.",
+        outcome:
+          "Terms are signed on a drumhead in the rain. Half the lords present think you weak. The other half start quietly wondering what you'd want for their charter.",
       },
     ],
   },
 ];
 
 export function finalEnemies(s: GameState): { title: string; enemyIds: string[] } {
-  if (s.branch === "usurper") return { title: "The Old Raven's Charge", enemyIds: ["boss_corvane", "raven_guard", "sun_lancer"] };
-  if (s.branch === "independent") return { title: "The Coalition Host", enemyIds: ["boss_coalition", "sun_lancer", "mercenary"] };
-  return { title: "The Hammer's Last Field", enemyIds: ["boss_draeven", "pact_hammer", "ash_crossbow"] };
+  if (s.branch === "usurper")
+    return {
+      title: "The Old Raven's Charge",
+      enemyIds: ["boss_corvane", "raven_guard", "sun_lancer"],
+    };
+  if (s.branch === "independent")
+    return { title: "The Coalition Host", enemyIds: ["boss_coalition", "sun_lancer", "mercenary"] };
+  return {
+    title: "The Hammer's Last Field",
+    enemyIds: ["boss_draeven", "pact_hammer", "ash_crossbow"],
+  };
 }
 
 export function currentBeat(s: GameState): StoryBeat | null {
@@ -371,20 +431,24 @@ export const ENDINGS: EndingDef[] = [
   {
     id: "united_realm",
     title: "The Realm Made Whole",
-    score: (s) => (s.branch === "loyalist" ? 10 : 0) + friendlyFactions(s) * 2 + (warCount(s) <= 2 ? 5 : 0),
+    score: (s) =>
+      (s.branch === "loyalist" ? 10 : 0) + friendlyFactions(s) * 2 + (warCount(s) <= 2 ? 5 : 0),
     body: (s) =>
       `The Hammer is broken and the houses, astonishingly, stay in the same room long enough to sign. ${
         s.npcs["lord_corvane"]?.alive
           ? "Lord Corvane rules as regent and complains about it daily."
           : "With Corvane dead, the council rules in his name and quotes him constantly."
       } ${
-        s.marriedTo ? `Your marriage binds the settlement together in a way no oath could.` : `You are offered a seat on the council and a title you didn't ask for.`
+        s.marriedTo
+          ? `Your marriage binds the settlement together in a way no oath could.`
+          : `You are offered a seat on the council and a title you didn't ask for.`
       } ${friendlyFactions(s)} of the six powers count you a friend, and ${warCount(s)} wars still smoulder at the borders: a realm made whole, not a realm made quiet.`,
   },
   {
     id: "hollow_crown",
     title: "The Hollow Crown",
-    score: (s) => (s.branch === "loyalist" ? 6 : 0) + (warCount(s) >= 4 ? 6 : 0) + (s.renown < 60 ? 3 : 0),
+    score: (s) =>
+      (s.branch === "loyalist" ? 6 : 0) + (warCount(s) >= 4 ? 6 : 0) + (s.fame < 60 ? 3 : 0),
     body: () =>
       "You win the last field and lose the peace. Within two years the coalition you built is three coalitions, each certain it did the most work. The crown sits on a boy nobody consulted, and the border lords have stopped answering letters. Still: the Hammer is dead, and the granaries were full this winter. Some victories are only ever the absence of a worse thing.",
   },
@@ -394,41 +458,55 @@ export const ENDINGS: EndingDef[] = [
     score: (s) => (s.branch === "usurper" ? 12 : 0) + (s.factions.ironpact.rep >= 40 ? 4 : 0),
     body: (s) =>
       `Draeven's realm is built exactly as he described it over that dinner: standing courts, drained fens, roads that go where trade goes. It is also built on the Ash Company and a list of names. ${
-        s.npcs["captain_maud"]?.recruited ? "Maud Kell keeps the peace and keeps a private tally of what it costs." : "Nobody is left who will tell him no."
+        s.npcs["captain_maud"]?.recruited
+          ? "Maud Kell keeps the peace and keeps a private tally of what it costs."
+          : "Nobody is left who will tell him no."
       } You are his right hand, wealthy beyond your first year's imagining, and you have learned to sleep through the sound of the night patrols.`,
   },
   {
     id: "the_usurpers_end",
     title: "A Knife for the Hammer",
     score: (s) =>
-      (s.branch === "usurper" && (s.npcs["lord_draeven"]?.alive === false || s.storyFlags["final_kill"] === true) ? 11 : 0) +
-      (s.renown > 80 ? 3 : 0),
+      (s.branch === "usurper" &&
+      (s.npcs["lord_draeven"]?.alive === false || s.storyFlags["final_kill"] === true)
+        ? 11
+        : 0) + (s.fame > 80 ? 3 : 0),
     body: () =>
       "You served the Hammer until the exact moment serving him stopped paying, and then you did what the Fen Widow would have done, only better and in public. The Pact acclaims you because the alternative is another decade of war. It is not a throne so much as a chair nobody else is willing to sit in yet.",
   },
   {
     id: "free_holds_rise",
     title: "No Lord Over Us",
-    score: (s) => (s.branch === "independent" ? 11 : 0) + (s.factions.freeholds.rep >= 30 ? 4 : 0) + (s.renown > 70 ? 2 : 0),
+    score: (s) =>
+      (s.branch === "independent" ? 11 : 0) +
+      (s.factions.freeholds.rep >= 30 ? 4 : 0) +
+      (s.fame > 70 ? 2 : 0),
     body: (s) =>
       `The Coalition host breaks on your walls, and the charter towns take the hint. Within a decade there are eleven of them, all quarrelling, all armed, none of them kneeling. ${
-        s.npcs["reeve_ilsa"]?.affinity && s.npcs["reeve_ilsa"].affinity > 20 ? "Ilsa Farr calls it the worst-run good idea in history and refuses to leave." : "The Reeve's Council never quite forgives you for being right."
+        s.npcs["reeve_ilsa"]?.affinity && s.npcs["reeve_ilsa"].affinity > 20
+          ? "Ilsa Farr calls it the worst-run good idea in history and refuses to leave."
+          : "The Reeve's Council never quite forgives you for being right."
       } Your banner still flies over the border tower. You are asked to be king twice and decline twice, mostly out of spite.`,
   },
   {
     id: "fractured_realm",
     title: "The Realm in Pieces",
-    score: (s) => (warCount(s) >= 6 ? 9 : 0) + (friendlyFactions(s) === 0 ? 5 : 0) + (s.branch === "independent" ? 2 : 0),
+    score: (s) =>
+      (warCount(s) >= 6 ? 9 : 0) +
+      (friendlyFactions(s) === 0 ? 5 : 0) +
+      (s.branch === "independent" ? 2 : 0),
     body: () =>
       "The Hammer falls and nothing rises to replace him. Six powers, six claims, and a map redrawn every campaign season by whoever has grain. You hold your keep, your household, and a stretch of road, and that is the honest total of what any lord in this realm now holds. History will call it a fracture. The people living through it mostly call it Tuesday.",
   },
   {
     id: "quiet_life",
     title: "The Quiet Ending",
-    score: (s) => (s.renown < 40 ? 8 : 0) + (s.marriedTo ? 4 : 0),
+    score: (s) => (s.fame < 40 ? 8 : 0) + (s.marriedTo ? 4 : 0),
     body: (s) =>
       `You end the war alive, moderately solvent, and famous in about four villages. ${
-        s.marriedTo ? "You are also married, which several chroniclers consider the more remarkable achievement." : "The chronicles record your name once, spelled wrong."
+        s.marriedTo
+          ? "You are also married, which several chroniclers consider the more remarkable achievement."
+          : "The chronicles record your name once, spelled wrong."
       } The great houses go on doing what great houses do. You go on eating regularly, which in this realm is its own kind of victory.`,
   },
 ];

@@ -59,8 +59,37 @@ export function localDelete(slot: number): void {
   window.localStorage.setItem(KEY, JSON.stringify(all));
 }
 
+/**
+ * Bring an older save forward instead of refusing it.
+ *
+ * CLAUDE.md calls the save version a trap, and it is: Danny plays this game
+ * while building it, so dropping his campaign because a field was added is a
+ * real cost. Each step is small and one-way, and anything older than the
+ * oldest step here is genuinely unreadable and returns null.
+ */
 export function migrate(state: GameState): GameState | null {
   if (!state || typeof state !== "object") return null;
-  if (state.version !== SAVE_VERSION) return null;
-  return state;
+  let s = state as GameState & { renown?: number };
+
+  // 5 -> 6: renown split into fame and honour (ruling 4), and standing became
+  // per place as well as per house (ruling 6).
+  if (s.version === 5) {
+    s = {
+      ...s,
+      version: 6,
+      fame: typeof s.renown === "number" ? s.renown : 0,
+      honour: 0,
+      standing: {},
+    };
+    delete s.renown;
+  }
+
+  if (s.version !== SAVE_VERSION) return null;
+  // A save from before a field existed still has to satisfy the current shape.
+  return {
+    ...s,
+    fame: typeof s.fame === "number" ? s.fame : 0,
+    honour: typeof s.honour === "number" ? s.honour : 0,
+    standing: s.standing && typeof s.standing === "object" ? s.standing : {},
+  };
 }

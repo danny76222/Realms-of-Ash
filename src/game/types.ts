@@ -165,7 +165,7 @@ export interface SideQuest {
   need: number;
   desc: string;
   rewardGold: number;
-  rewardRenown: number;
+  rewardFame: number;
   repShift?: number;
   npcShift?: { npcId: string; amount: number };
 }
@@ -181,7 +181,9 @@ export interface StoryChoice {
   npc?: { npcId: string; affinity?: number; kill?: boolean; recruit?: boolean }[];
   relations?: { a: FactionId; b: FactionId; kind: RelationKind }[];
   gold?: number;
-  renown?: number;
+  fame?: number;
+  /** Left out on most choices. Derived from unambiguous acts when absent. */
+  honour?: number;
   outcome: string;
 }
 
@@ -209,7 +211,20 @@ export interface EndingDef {
 export interface WorldEvent {
   day: number;
   text: string;
-  kind: "war" | "peace" | "alliance" | "raid" | "territory" | "court";
+  kind:
+    | "war"
+    | "peace"
+    | "alliance"
+    | "raid"
+    | "territory"
+    | "court"
+    /** Aimed at the player rather than between two houses. Ruling 1. */
+    | "bounty"
+    | "offer"
+    | "shunned"
+    | "welcome";
+  /** Set on events aimed at the player, so the interface can mark them. */
+  aboutYou?: boolean;
 }
 
 /* ---------------- game state ---------------- */
@@ -227,7 +242,12 @@ export interface GameState {
   /** Hour of the day, 0-23. The clock inside the day. */
   hour: number;
   gold: number;
-  renown: number;
+  /** Ruling 4: how big your name is. Any deed grows it, good or ill. */
+  fame: number;
+  /** Ruling 4: what colour that name is. Separate from how big it is. */
+  honour: number;
+  /** Ruling 6: standing in each PLACE, keyed by location id. Absent means no opinion. */
+  standing: Record<string, number>;
   locationId: string;
   party: Unit[];
   inventory: Record<string, number>;
