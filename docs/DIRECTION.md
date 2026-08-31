@@ -163,6 +163,26 @@ palette drift, with a negative control.
 
 Six tiles is enough to find out: grass, dirt path, stone, water, wall, roof.
 
+## 13. No preview deploy yet
+
+**Ruled 2026-08-31.** Danny reviews the build through Claude rather than
+playing a hosted copy. Revisit once Lovable sync exists.
+
+When we do deploy, it is **guest saves only**: local storage, no Supabase
+variables on the host. The keys are publishable and protected by RLS, so the
+reason is fewer moving parts rather than safety.
+
+Two things worth keeping, since they took a while to establish:
+
+- The build already targets Cloudflare Workers. `bun run build` emits the
+  `cloudflare-module` nitro preset and writes its own `wrangler.json`, so a
+  deploy is `npx wrangler deploy` from `.output/server` and needs no config
+  change. Netlify would mean switching the preset and spending build credits
+  for no gain.
+- **Lovable's own Publish button ships Lovable's copy of the code, not this
+  repo.** Until the GitHub connection exists, pressing it publishes the game as
+  it was before any of this work. Nobody should reach for it as a shortcut.
+
 ---
 
 ## Open questions, not yet ruled
