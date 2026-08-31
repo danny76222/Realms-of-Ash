@@ -1,15 +1,12 @@
+import type { RngState } from "./rng";
+
 /* ---------------- core ids ---------------- */
 
 export type ClassId = "warrior" | "archer" | "healer" | "squire" | "scout";
 export type BackgroundId = "hedge_knight" | "merchant_son" | "poacher" | "acolyte" | "exile";
 
 export type FactionId =
-  | "ravensfell"
-  | "goldmere"
-  | "ironpact"
-  | "sunmarch"
-  | "thornwold"
-  | "freeholds";
+  "ravensfell" | "goldmere" | "ironpact" | "sunmarch" | "thornwold" | "freeholds";
 
 export type RelationKind = "war" | "peace" | "alliance";
 export type BranchId = "loyalist" | "usurper" | "independent";
@@ -80,7 +77,8 @@ export interface Skill {
 
 /* ---------------- world ---------------- */
 
-export type LocationKind = "village" | "castle" | "dungeon" | "ruin" | "shrine" | "camp" | "landmark";
+export type LocationKind =
+  "village" | "castle" | "dungeon" | "ruin" | "shrine" | "camp" | "landmark";
 
 export interface WorldLocation {
   id: string;
@@ -219,6 +217,8 @@ export interface WorldEvent {
 export interface GameState {
   version: number;
   seed: number;
+  /** Serialised sfc32 stream. Every rule-level random draw comes from here. */
+  rng: RngState;
   heroName: string;
   heroClass: ClassId;
   background: BackgroundId;
@@ -287,6 +287,8 @@ export interface BattleReward {
 
 export interface Battle {
   title: string;
+  /** The battle carries its own stream so a fight replays exactly. */
+  rng: RngState;
   combatants: Combatant[];
   order: string[];
   turn: number;

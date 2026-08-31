@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { CLASSES, ITEMS, SKILLS } from "@/game/data";
-import { makeUnit } from "@/game/engine";
 import {
   addItem,
+  hireRecruit,
   advanceDays,
   sleepToMorning,
   buyItem,
@@ -49,10 +49,34 @@ function regardTier(v: number): string {
   return "besotted";
 }
 
-const COURT_LINES: { id: string; label: string; detail: string; amount: number; log: (n: string) => string }[] = [
-  { id: "flatter", label: "Flatter them", detail: "Cheap, and it shows.", amount: 1, log: (n) => `You praise ${n}'s judgement. They pretend not to enjoy it.` },
-  { id: "honest", label: "Speak plainly", detail: "Risky, but it lands.", amount: 4, log: (n) => `You tell ${n} the truth about the war. Something in them settles.` },
-  { id: "walk", label: "Walk the walls", detail: "An hour of nothing in particular.", amount: 3, log: (n) => `You and ${n} walk until the torches are lit. Neither of you mentions politics.` },
+const COURT_LINES: {
+  id: string;
+  label: string;
+  detail: string;
+  amount: number;
+  log: (n: string) => string;
+}[] = [
+  {
+    id: "flatter",
+    label: "Flatter them",
+    detail: "Cheap, and it shows.",
+    amount: 1,
+    log: (n) => `You praise ${n}'s judgement. They pretend not to enjoy it.`,
+  },
+  {
+    id: "honest",
+    label: "Speak plainly",
+    detail: "Risky, but it lands.",
+    amount: 4,
+    log: (n) => `You tell ${n} the truth about the war. Something in them settles.`,
+  },
+  {
+    id: "walk",
+    label: "Walk the walls",
+    detail: "An hour of nothing in particular.",
+    amount: 3,
+    log: (n) => `You and ${n} walk until the torches are lit. Neither of you mentions politics.`,
+  },
 ];
 
 /** Expression grading standing in for portrait variants. */
@@ -64,7 +88,19 @@ function npcMood(affinity: number) {
 }
 
 export function LocationScreen() {
-  const { game, update, setScreen, fight, enterDungeon, run, nextRoom, leaveDungeon, setPendingQuest, notice, setNotice } = useGame();
+  const {
+    game,
+    update,
+    setScreen,
+    fight,
+    enterDungeon,
+    run,
+    nextRoom,
+    leaveDungeon,
+    setPendingQuest,
+    notice,
+    setNotice,
+  } = useGame();
   const [talking, setTalking] = useState<string | null>(null);
   const [wedding, setWedding] = useState<string | null>(null);
   const { settings } = useSettings();
@@ -74,9 +110,13 @@ export function LocationScreen() {
   const faction = loc.faction ? FACTIONS[loc.faction] : null;
   const look = locationLook(loc.id, loc.kind);
   const beat = currentBeat(game);
-  const beatHere = beat && (beat.location === null || beat.location === game.locationId) ? beat : null;
+  const beatHere =
+    beat && (beat.location === null || beat.location === game.locationId) ? beat : null;
 
-  const offered = useMemo(() => generateSideQuests(game, game.locationId), [game.locationId, game.day, game.seed]);
+  const offered = useMemo(
+    () => generateSideQuests(game, game.locationId),
+    [game.locationId, game.day, game.seed],
+  );
   const active: SideQuest[] = useMemo(
     () =>
       game.activeSide
@@ -117,9 +157,23 @@ export function LocationScreen() {
     return (
       <div className="mx-auto max-w-2xl px-3 pb-10">
         <Panel title="A Match Is Made">
-          {settings.sceneArt ? <SceneArt src={ART.wedding} alt="A wedding in a stone hall" className="mb-3" height="h-40 sm:h-52" /> : null}
+          {settings.sceneArt ? (
+            <SceneArt
+              src={ART.wedding}
+              alt="A wedding in a stone hall"
+              className="mb-3"
+              height="h-40 sm:h-52"
+            />
+          ) : null}
           <DialogueBox
-            {...(spouse ? { speaker: spouse.name, portrait: settings.sceneArt ? NPC_ART[wedding] : undefined, glyph: spouse.portrait, voiceId: wedding } : {})}
+            {...(spouse
+              ? {
+                  speaker: spouse.name,
+                  portrait: settings.sceneArt ? NPC_ART[wedding] : undefined,
+                  glyph: spouse.portrait,
+                  voiceId: wedding,
+                }
+              : {})}
             text={`The hall is cold, the wine is worse, and half the guests came to count your soldiers. None of that matters when ${
               spouse?.name ?? "they"
             } takes your hand. ${
@@ -140,7 +194,6 @@ export function LocationScreen() {
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-3 px-3 pb-10 lg:grid-cols-[1fr_20rem]">
       <div className="space-y-3">
-
         {notice ? (
           <Panel className="border-primary">
             <div className="flex items-center gap-2">
@@ -154,7 +207,11 @@ export function LocationScreen() {
 
         <Panel
           title={`${loc.name} — ${KIND_LABEL[loc.kind]}${faction ? ` of ${faction.name}` : ""}`}
-          right={<PixelButton size="sm" variant="ghost" onClick={() => setScreen("map")}>Travel</PixelButton>}
+          right={
+            <PixelButton size="sm" variant="ghost" onClick={() => setScreen("map")}>
+              Travel
+            </PixelButton>
+          }
         >
           {settings.sceneArt && look.src ? (
             <SceneArt
@@ -168,7 +225,9 @@ export function LocationScreen() {
             />
           ) : null}
           <p className="text-lg italic leading-relaxed text-muted-foreground">{loc.blurb}</p>
-          <p className="mt-1 text-sm italic text-muted-foreground">{ambientLine(loc.kind, game.day + game.locationId.length)}</p>
+          <p className="mt-1 text-sm italic text-muted-foreground">
+            {ambientLine(loc.kind, game.day + game.locationId.length)}
+          </p>
           <p className="pixel-font mt-1 text-[9px] uppercase text-muted-foreground">
             {weatherOf(game).glyph} {weatherOf(game).name} · {timeOf(game).label}
           </p>
@@ -177,12 +236,24 @@ export function LocationScreen() {
             <PixelButton
               size="sm"
               variant="ghost"
-              onClick={() => update((g) => pushLog(restParty(sleepToMorning(g), 0.6), "You rest the night through. The world does not."))}
+              onClick={() =>
+                update((g) =>
+                  pushLog(
+                    restParty(sleepToMorning(g), 0.6),
+                    "You rest the night through. The world does not.",
+                  ),
+                )
+              }
             >
               Rest till morning
             </PixelButton>
             {loc.kind === "dungeon" || loc.kind === "ruin" || loc.kind === "camp" ? (
-              <PixelButton size="sm" variant="danger" disabled={!!run} onClick={() => enterDungeon(loc.id)}>
+              <PixelButton
+                size="sm"
+                variant="danger"
+                disabled={!!run}
+                onClick={() => enterDungeon(loc.id)}
+              >
                 Go in
               </PixelButton>
             ) : null}
@@ -192,7 +263,10 @@ export function LocationScreen() {
                 variant="accent"
                 onClick={() =>
                   update((g) =>
-                    pushLog(restParty(sleepToMorning(g), 1), "The keeper says the old words over your company. Everyone is whole again."),
+                    pushLog(
+                      restParty(sleepToMorning(g), 1),
+                      "The keeper says the old words over your company. Everyone is whole again.",
+                    ),
                   )
                 }
               >
@@ -214,7 +288,13 @@ export function LocationScreen() {
         {run ? (
           <Panel title={`In the Depths — ${loc.name}`}>
             {settings.sceneArt && look.src ? (
-              <SceneArt src={look.src} alt={`${loc.name} depths`} className="mb-2" height="h-24 sm:h-28" filter={look.filter} />
+              <SceneArt
+                src={look.src}
+                alt={`${loc.name} depths`}
+                className="mb-2"
+                height="h-24 sm:h-28"
+                filter={look.filter}
+              />
             ) : null}
             <div className="mb-2 flex flex-wrap gap-1">
               {run.rooms.map((r, i) => (
@@ -240,7 +320,10 @@ export function LocationScreen() {
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Haul so far: {run.gold} gold
-              {run.loot.length ? `, ${run.loot.map((l) => ITEMS[l]?.name ?? l).join(", ")}` : ", nothing worth carrying yet"}.
+              {run.loot.length
+                ? `, ${run.loot.map((l) => ITEMS[l]?.name ?? l).join(", ")}`
+                : ", nothing worth carrying yet"}
+              .
             </p>
             <div className="mt-2 flex gap-2">
               {run.index < run.rooms.length ? (
@@ -248,12 +331,16 @@ export function LocationScreen() {
                   Press deeper
                 </PixelButton>
               ) : null}
-              <PixelButton size="sm" variant="ghost" sfx={run.index >= run.rooms.length ? "confirm" : "cancel"} onClick={leaveDungeon}>
+              <PixelButton
+                size="sm"
+                variant="ghost"
+                sfx={run.index >= run.rooms.length ? "confirm" : "cancel"}
+                onClick={leaveDungeon}
+              >
                 {run.index >= run.rooms.length ? "Claim the hoard" : "Withdraw with half"}
               </PixelButton>
             </div>
           </Panel>
-
         ) : null}
 
         {npcsHere.length ? (
@@ -270,7 +357,11 @@ export function LocationScreen() {
                 return (
                   <li key={id} className="border border-border bg-background/40 p-2">
                     <div className="flex items-center gap-2">
-                      <Portrait src={settings.sceneArt ? NPC_ART[id] : undefined} glyph={npc.portrait} alt={npc.name} />
+                      <Portrait
+                        src={settings.sceneArt ? NPC_ART[id] : undefined}
+                        glyph={npc.portrait}
+                        alt={npc.name}
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="pixel-font text-[10px] text-primary">
                           {npc.name}
@@ -278,7 +369,11 @@ export function LocationScreen() {
                         </p>
                         <p className="text-sm text-muted-foreground">{npc.title}</p>
                       </div>
-                      <PixelButton size="sm" variant="ghost" onClick={() => setTalking(talking === id ? null : id)}>
+                      <PixelButton
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setTalking(talking === id ? null : id)}
+                      >
                         {talking === id ? "Leave" : "Speak"}
                       </PixelButton>
                     </div>
@@ -297,7 +392,10 @@ export function LocationScreen() {
                           <div className="mt-1 space-y-1">
                             <div className="flex flex-wrap gap-1">
                               {chr.traits.map((t) => (
-                                <span key={t} className="pixel-font border border-border px-1 py-0.5 text-[8px] uppercase text-muted-foreground">
+                                <span
+                                  key={t}
+                                  className="pixel-font border border-border px-1 py-0.5 text-[8px] uppercase text-muted-foreground"
+                                >
                                   {t}
                                 </span>
                               ))}
@@ -306,14 +404,21 @@ export function LocationScreen() {
                               </span>
                             </div>
                             <p className="text-sm text-muted-foreground">{chr.backstory}</p>
-                            <p className="text-sm italic text-muted-foreground">Voice: {chr.speech}</p>
+                            <p className="text-sm italic text-muted-foreground">
+                              Voice: {chr.speech}
+                            </p>
                           </div>
                         ) : (
-                          <p className="mt-1 text-sm italic text-muted-foreground">{npc.personality}</p>
+                          <p className="mt-1 text-sm italic text-muted-foreground">
+                            {npc.personality}
+                          </p>
                         )}
 
                         <div className="mt-2">
-                          <Meter value={Math.max(0, st.affinity)} label={`Regard ${st.affinity} — ${regardTier(st.affinity)}`} />
+                          <Meter
+                            value={Math.max(0, st.affinity)}
+                            label={`Regard ${st.affinity} — ${regardTier(st.affinity)}`}
+                          />
                         </div>
 
                         <div className="mt-2 flex flex-wrap gap-1">
@@ -321,7 +426,12 @@ export function LocationScreen() {
                             size="sm"
                             variant="ghost"
                             onClick={() =>
-                              update((g) => pushLog(shiftAffinity(g, id, 2), `You spend an hour listening to ${npc.name}. It counts for something.`))
+                              update((g) =>
+                                pushLog(
+                                  shiftAffinity(g, id, 2),
+                                  `You spend an hour listening to ${npc.name}. It counts for something.`,
+                                ),
+                              )
                             }
                           >
                             Talk a while
@@ -333,14 +443,24 @@ export function LocationScreen() {
                                   size="sm"
                                   variant="ghost"
                                   title={cl.detail}
-                                  onClick={() => update((g) => pushLog(shiftAffinity(g, id, cl.amount), cl.log(npc.name)))}
+                                  onClick={() =>
+                                    update((g) =>
+                                      pushLog(shiftAffinity(g, id, cl.amount), cl.log(npc.name)),
+                                    )
+                                  }
                                 >
                                   {cl.label}
                                 </PixelButton>
                               ))
                             : null}
                           {gifts.map((gi) => (
-                            <PixelButton key={gi} size="sm" variant="accent" sfx="confirm" onClick={() => update((g) => giveGift(g, id, gi))}>
+                            <PixelButton
+                              key={gi}
+                              size="sm"
+                              variant="accent"
+                              sfx="confirm"
+                              onClick={() => update((g) => giveGift(g, id, gi))}
+                            >
                               Gift: {ITEMS[gi]!.name}
                             </PixelButton>
                           ))}
@@ -354,13 +474,17 @@ export function LocationScreen() {
                                 setWedding(id);
                               }}
                             >
-                              {canPropose(game, id) ? "Propose marriage" : `Propose (regard ${st.affinity}/60, renown ${game.renown}/30)`}
+                              {canPropose(game, id)
+                                ? "Propose marriage"
+                                : `Propose (regard ${st.affinity}/60, renown ${game.renown}/30)`}
                             </PixelButton>
                           ) : null}
                         </div>
                         {courting ? (
                           <p className="mt-1 text-sm text-muted-foreground">
-                            A match here would bind you to {npc.faction ? FACTIONS[npc.faction].name : "their house"} — their wars would become yours.
+                            A match here would bind you to{" "}
+                            {npc.faction ? FACTIONS[npc.faction].name : "their house"} — their wars
+                            would become yours.
                           </p>
                         ) : null}
                       </div>
@@ -371,7 +495,6 @@ export function LocationScreen() {
             </ul>
           </Panel>
         ) : null}
-
 
         {(loc.kind === "village" || loc.kind === "castle") && offered.length ? (
           <Panel title={loc.kind === "castle" ? "Petitions & Commissions" : "Rumours & Work"}>
@@ -385,13 +508,16 @@ export function LocationScreen() {
                       <span className="min-w-0 flex-1">
                         <span className="pixel-font text-[10px] text-primary">{q.name}</span>
                         <span className="block text-sm text-muted-foreground">
-                          {q.desc} → {LOCATIONS[q.target]?.name}. {q.rewardGold} gold, {q.rewardRenown} renown.
+                          {q.desc} → {LOCATIONS[q.target]?.name}. {q.rewardGold} gold,{" "}
+                          {q.rewardRenown} renown.
                         </span>
                       </span>
                       {done ? (
                         <span className="pixel-font text-[9px] text-accent">done</span>
                       ) : accepted ? (
-                        <span className="pixel-font text-[9px] text-muted-foreground">accepted</span>
+                        <span className="pixel-font text-[9px] text-muted-foreground">
+                          accepted
+                        </span>
                       ) : (
                         <PixelButton size="sm" onClick={() => update((g) => acceptQuest(g, q))}>
                           Take it
@@ -409,10 +535,15 @@ export function LocationScreen() {
           <Panel title="Work in Hand">
             <ul className="space-y-1">
               {activeAll.map((q) => (
-                <li key={q.id} className="flex flex-wrap items-center gap-2 border border-border bg-background/40 px-2 py-1.5">
+                <li
+                  key={q.id}
+                  className="flex flex-wrap items-center gap-2 border border-border bg-background/40 px-2 py-1.5"
+                >
                   <span className="min-w-0 flex-1 text-sm">
                     {q.name} — target {LOCATIONS[q.target]?.name}
-                    {q.kind === "escort" ? ` (${game.quests[q.id]?.progress ?? 0}/${q.need} legs)` : ""}
+                    {q.kind === "escort"
+                      ? ` (${game.quests[q.id]?.progress ?? 0}/${q.need} legs)`
+                      : ""}
                   </span>
                   {q.target === game.locationId || q.kind === "escort" ? (
                     <PixelButton size="sm" variant="accent" onClick={() => resolveQuest(q)}>
@@ -432,12 +563,19 @@ export function LocationScreen() {
                 const item = ITEMS[id];
                 if (!item) return null;
                 return (
-                  <li key={id} className="flex items-center gap-2 border border-border bg-background/40 px-2 py-1">
+                  <li
+                    key={id}
+                    className="flex items-center gap-2 border border-border bg-background/40 px-2 py-1"
+                  >
                     <span className="min-w-0 flex-1 text-sm">
                       <span className="text-foreground">{item.name}</span>
                       <span className="block text-muted-foreground">{item.desc}</span>
                     </span>
-                    <PixelButton size="sm" disabled={game.gold < item.price} onClick={() => update((g) => buyItem(g, id))}>
+                    <PixelButton
+                      size="sm"
+                      disabled={game.gold < item.price}
+                      onClick={() => update((g) => buyItem(g, id))}
+                    >
                       {item.price}🪙
                     </PixelButton>
                   </li>
@@ -454,7 +592,10 @@ export function LocationScreen() {
                 const cls = CLASSES[cid];
                 const cost = 80 + heroLevel * 40;
                 return (
-                  <li key={`${cid}${i}`} className="flex items-center gap-2 border border-border bg-background/40 px-2 py-1">
+                  <li
+                    key={`${cid}${i}`}
+                    className="flex items-center gap-2 border border-border bg-background/40 px-2 py-1"
+                  >
                     <span className="min-w-0 flex-1 text-sm">
                       <span className="pixel-font text-[10px] text-primary">
                         {cls.sprite} {cls.name}
@@ -467,12 +608,7 @@ export function LocationScreen() {
                       size="sm"
                       disabled={game.gold < cost}
                       onClick={() =>
-                        update((g) => {
-                          if (g.gold < cost || g.party.length >= 4) return g;
-                          const names = ["Wat", "Elga", "Perrin", "Sable", "Odo", "Nessa", "Rook", "Til"];
-                          const u = makeUnit(names[Math.floor(Math.random() * names.length)]!, cid, Math.max(1, heroLevel - 1));
-                          return pushLog({ ...g, gold: g.gold - cost, party: [...g.party, u] }, `${u.name} the ${cls.name} signs on.`);
-                        })
+                        update((g) => hireRecruit(g, cid, cost, Math.max(1, heroLevel - 1)))
                       }
                     >
                       {cost}🪙
@@ -492,7 +628,10 @@ export function LocationScreen() {
               onClick={() =>
                 update((g) => {
                   const find = Math.random() < 0.5 ? "old_coin" : "relic_shard";
-                  return pushLog(addItem(advanceDays(g, 1), find, 1), `You spend a day poking about and turn up a ${ITEMS[find]!.name}.`);
+                  return pushLog(
+                    addItem(advanceDays(g, 1), find, 1),
+                    `You spend a day poking about and turn up a ${ITEMS[find]!.name}.`,
+                  );
                 })
               }
             >

@@ -1,12 +1,18 @@
 import { CLASSES, ITEMS, SKILLS } from "./data";
 import { ENEMIES } from "./enemies";
+import { Rng, type RngState } from "./rng";
 import type { Battle, ClassId, Combatant, GameState, Skill, Unit, UnitStats } from "./types";
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
-export const rid = () => Math.random().toString(36).slice(2, 10);
-export const rnd = (min: number, max: number) => min + Math.random() * (max - min);
-export const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]!;
+/**
+ * These used to draw from Math.random, which meant GameState.seed described
+ * only the weather and the dungeons while every other roll drifted. They now
+ * take the stream explicitly, so the compiler finds any caller that forgot.
+ */
+export const rid = (r: Rng): string => r.id();
+export const rnd = (r: Rng, min: number, max: number): number => r.range(min, max);
+export const pick = <T>(r: Rng, arr: readonly T[]): T => r.pick(arr);
 
 export function xpForLevel(level: number): number {
   return Math.round(60 * Math.pow(level, 1.45));
@@ -34,10 +40,10 @@ export function unitStats(unit: Unit): UnitStats {
   return stats;
 }
 
-export function makeUnit(name: string, classId: ClassId, level = 1, isHero = false): Unit {
+export function makeUnit(r: Rng, name: string, classId: ClassId, level = 1, isHero = false): Unit {
   const cls = CLASSES[classId];
   const unit: Unit = {
-    id: rid(),
+    id: rid(r),
     name,
     classId,
     level,
@@ -82,11 +88,16 @@ function toCombatant(unit: Unit): Combatant {
   };
 }
 
-export function enemyCombatant(templateId: string, level: number, index: number): Combatant {
+export function enemyCombatant(
+  r: Rng,
+  templateId: string,
+  level: number,
+  index: number,
+): Combatant {
   const t = ENEMIES[templateId]!;
   const scale = (t.boss ? 1.05 : 1) * (1 + Math.max(0, level - 1) * 0.1);
   return {
-    id: `e_${templateId}_${index}_${rid()}`,
+    id: `e_${templateId}_${index}_${rid(r)}`,
     name: t.name,
     side: "enemy",
     classId: t.classId,
@@ -122,36 +133,43 @@ export function createBattle(opts: {
   bonusGold?: number;
   loot?: string[];
   levelOverride?: number;
-}): Battle {
+}): { battle: Battle; rng: RngState } {
+  const r = Rng.restore(opts.state.rng);
   const level = opts.levelOverride ?? partyPower(opts.state);
   const allies = opts.state.party.map(toCombatant);
-  const enemies = opts.enemyIds.map((id, i) => enemyCombatant(id, level, i));
+  const enemies = opts.enemyIds.map((id, i) => enemyCombatant(r, id, level, i));
   const combatants = [...allies, ...enemies];
   const reward = opts.enemyIds.reduce(
     (acc, id) => {
       const t = ENEMIES[id]!;
-      acc.gold += Math.round(t.gold * rnd(0.85, 1.2));
+      acc.gold += Math.round(t.gold * rnd(r, 0.85, 1.2));
       acc.xp += t.xp;
-      if (t.loot && Math.random() < 0.4) acc.loot.push(pick(t.loot));
+      if (t.loot && r.chance(0.4)) acc.loot.push(pick(r, t.loot));
       return acc;
     },
     { gold: opts.bonusGold ?? 0, xp: 0, loot: [...(opts.loot ?? [])] as string[] },
   );
   const boss = enemies.find((e) => e.boss);
-  const bossLine = boss ? ENEMIES[opts.enemyIds.find((id) => ENEMIES[id]?.boss) ?? ""]?.taunt : null;
-  return {
+  const bossLine = boss
+    ? ENEMIES[opts.enemyIds.find((id) => ENEMIES[id]?.boss) ?? ""]?.taunt
+    : null;
+  const battle: Battle = {
     title: opts.title,
+    rng: new Rng(r.int(0, 0x7fffffff)).save(),
     combatants,
     order: buildOrder(combatants),
     turn: 0,
     round: 1,
-    log: bossLine ? [bossLine, `${opts.title} — the line forms.`] : [`${opts.title} — the line forms.`],
+    log: bossLine
+      ? [bossLine, `${opts.title}: the line forms.`]
+      : [`${opts.title}: the line forms.`],
     status: "active",
     reward,
     returnTo: opts.returnTo,
     tag: opts.tag ?? null,
     canFlee: opts.canFlee ?? true,
   };
+  return { battle, rng: r.save() };
 }
 
 /* ---------------- turn resolution ---------------- */
@@ -167,9 +185,9 @@ function eff(c: Combatant) {
   return { atk: Math.max(1, c.atk + c.fx.atkMod), def: Math.max(0, c.def + c.fx.defMod) };
 }
 
-function damage(att: Combatant, def: Combatant, mult: number, pierce = false): number {
+function damage(r: Rng, att: Combatant, def: Combatant, mult: number, pierce = false): number {
   const armour = pierce ? 0 : eff(def).def * (def.defending ? 1.6 : 0.8);
-  const raw = eff(att).atk * mult * rnd(0.88, 1.14) - armour;
+  const raw = eff(att).atk * mult * rnd(r, 0.88, 1.14) - armour;
   return Math.max(1, Math.round(raw));
 }
 
@@ -193,7 +211,9 @@ function advance(b: Battle): Battle {
     const c = combatants.find((x) => x.id === id);
     if (!c || !alive(c)) continue;
     if (c.fx.stunned) {
-      combatants = combatants.map((x) => (x.id === c.id ? { ...x, fx: { ...x.fx, stunned: false } } : x));
+      combatants = combatants.map((x) =>
+        x.id === c.id ? { ...x, fx: { ...x.fx, stunned: false } } : x,
+      );
       continue;
     }
     break;
@@ -223,7 +243,9 @@ function applyDamage(b: Battle, targetId: string, amount: number): Battle {
 function healCombatant(b: Battle, id: string, amount: number): Battle {
   return {
     ...b,
-    combatants: b.combatants.map((c) => (c.id === id ? { ...c, hp: Math.min(c.maxHp, c.hp + amount) } : c)),
+    combatants: b.combatants.map((c) =>
+      c.id === id ? { ...c, hp: Math.min(c.maxHp, c.hp + amount) } : c,
+    ),
   };
 }
 
@@ -234,7 +256,14 @@ export type PlayerAction =
   | { kind: "item"; itemId: string; targetId: string }
   | { kind: "flee" };
 
-export function takeTurn(battle: Battle, action: PlayerAction): { battle: Battle; usedItem?: string | undefined } {
+export function takeTurn(
+  battle: Battle,
+  action: PlayerAction,
+): { battle: Battle; usedItem?: string | undefined } {
+  // One stream for the whole turn, restored from the battle and written back
+  // at every exit. Nothing in a fight draws from anywhere else.
+  const r = Rng.restore(battle.rng);
+  const seal = (b: Battle): Battle => ({ ...b, rng: r.save() });
   let b = battle;
   const actor = activeCombatant(b);
   if (!actor || b.status !== "active") return { battle: b };
@@ -243,7 +272,7 @@ export function takeTurn(battle: Battle, action: PlayerAction): { battle: Battle
   if (action.kind === "attack") {
     const target = b.combatants.find((c) => c.id === action.targetId);
     if (!target || !alive(target)) return { battle: b };
-    const dmg = damage(actor, target, 1);
+    const dmg = damage(r, actor, target, 1);
     b = applyDamage(b, target.id, dmg);
     b = withLog(b, `${actor.name} strikes ${target.name} for ${dmg}.`);
   } else if (action.kind === "defend") {
@@ -258,8 +287,13 @@ export function takeTurn(battle: Battle, action: PlayerAction): { battle: Battle
     const skill = SKILLS[action.skillId];
     if (!skill || !actor.skills.includes(skill.id)) return { battle: b };
     if (actor.focus < skill.cost) return { battle: withLog(b, `${actor.name} lacks focus.`) };
-    b = { ...b, combatants: b.combatants.map((c) => (c.id === actor.id ? { ...c, focus: c.focus - skill.cost } : c)) };
-    b = resolveSkill(b, actor, skill, action.targetId);
+    b = {
+      ...b,
+      combatants: b.combatants.map((c) =>
+        c.id === actor.id ? { ...c, focus: c.focus - skill.cost } : c,
+      ),
+    };
+    b = resolveSkill(r, b, actor, skill, action.targetId);
   } else if (action.kind === "item") {
     const item = ITEMS[action.itemId];
     const target = b.combatants.find((c) => c.id === action.targetId);
@@ -270,41 +304,54 @@ export function takeTurn(battle: Battle, action: PlayerAction): { battle: Battle
     usedItem = item.id;
   } else if (action.kind === "flee") {
     if (!b.canFlee) return { battle: withLog(b, "There is no way out of this one.") };
-    const fastest = Math.max(...b.combatants.filter((c) => c.side === "enemy" && alive(c)).map((c) => c.spd));
+    const fastest = Math.max(
+      ...b.combatants.filter((c) => c.side === "enemy" && alive(c)).map((c) => c.spd),
+    );
     const chance = Math.min(0.9, 0.35 + (actor.spd - fastest) * 0.06);
-    if (Math.random() < chance) return { battle: { ...b, status: "fled", log: ["You break away.", ...b.log] } };
+    if (r.chance(chance))
+      return { battle: seal({ ...b, status: "fled", log: ["You break away.", ...b.log] }) };
     b = withLog(b, `${actor.name} fails to break away.`);
   }
 
   b = checkEnd(b);
-  if (b.status !== "active") return { battle: b, usedItem };
+  if (b.status !== "active") return { battle: seal(b), usedItem };
   b = advance(b);
-  b = runEnemyTurns(b);
-  return { battle: b, usedItem };
+  b = runEnemyTurns(r, b);
+  return { battle: seal(b), usedItem };
 }
 
-function resolveSkill(b: Battle, actor: Combatant, skill: Skill, targetId?: string): Battle {
+function resolveSkill(
+  r: Rng,
+  b: Battle,
+  actor: Combatant,
+  skill: Skill,
+  targetId?: string,
+): Battle {
   const enemySide = actor.side === "ally" ? "enemy" : "ally";
   const foes = b.combatants.filter((c) => c.side === enemySide && alive(c));
   const friends = b.combatants.filter((c) => c.side === actor.side && alive(c));
   const target = b.combatants.find((c) => c.id === targetId && alive(c)) ?? foes[0];
   const fx = skill.effect;
-  const tag = `${actor.name} — ${skill.name}!`;
+  const tag = `${actor.name}: ${skill.name}!`;
 
   switch (fx.type) {
     case "strike": {
       if (!target) return b;
-      const d = damage(actor, target, fx.mult, fx.pierce);
+      const d = damage(r, actor, target, fx.mult, fx.pierce);
       return withLog(applyDamage(b, target.id, d), `${tag} ${target.name} takes ${d}.`);
     }
     case "stun": {
       if (!target) return b;
-      const d = damage(actor, target, fx.mult);
+      const d = damage(r, actor, target, fx.mult);
       let nb = applyDamage(b, target.id, d);
       nb = {
         ...nb,
         combatants: nb.combatants.map((c) =>
-          c.id === target.id ? { ...c, fx: { ...c.fx, stunned: true } } : c.id === actor.id ? { ...c, defending: true } : c,
+          c.id === target.id
+            ? { ...c, fx: { ...c.fx, stunned: true } }
+            : c.id === actor.id
+              ? { ...c, defending: true }
+              : c,
         ),
       };
       return withLog(nb, `${tag} ${target.name} takes ${d} and reels.`);
@@ -313,7 +360,7 @@ function resolveSkill(b: Battle, actor: Combatant, skill: Skill, targetId?: stri
       let nb = b;
       let total = 0;
       for (const f of foes) {
-        const d = damage(actor, f, fx.mult);
+        const d = damage(r, actor, f, fx.mult);
         total += d;
         nb = applyDamage(nb, f.id, d);
       }
@@ -321,7 +368,7 @@ function resolveSkill(b: Battle, actor: Combatant, skill: Skill, targetId?: stri
     }
     case "drain": {
       if (!target) return b;
-      const d = damage(actor, target, fx.mult);
+      const d = damage(r, actor, target, fx.mult);
       let nb = applyDamage(b, target.id, d);
       const heal = Math.round(d / 2);
       nb = healCombatant(nb, actor.id, heal);
@@ -331,11 +378,19 @@ function resolveSkill(b: Battle, actor: Combatant, skill: Skill, targetId?: stri
       const wounded = [...friends].sort((a, x) => a.hp / a.maxHp - x.hp / x.maxHp)[0];
       if (!wounded) return b;
       const heal = Math.round(wounded.maxHp * fx.pct);
-      return withLog(healCombatant(b, wounded.id, heal), `${tag} ${wounded.name} recovers ${heal} HP.`);
+      return withLog(
+        healCombatant(b, wounded.id, heal),
+        `${tag} ${wounded.name} recovers ${heal} HP.`,
+      );
     }
     case "guard": {
       return withLog(
-        { ...b, combatants: b.combatants.map((c) => (c.id === actor.id ? { ...c, guard: c.guard + fx.reduce } : c)) },
+        {
+          ...b,
+          combatants: b.combatants.map((c) =>
+            c.id === actor.id ? { ...c, guard: c.guard + fx.reduce } : c,
+          ),
+        },
         `${tag} ${actor.name} braces behind ${fx.reduce} points of guard.`,
       );
     }
@@ -378,7 +433,7 @@ function resolveSkill(b: Battle, actor: Combatant, skill: Skill, targetId?: stri
   }
 }
 
-function runEnemyTurns(b: Battle): Battle {
+function runEnemyTurns(r: Rng, b: Battle): Battle {
   let guard = 0;
   while (b.status === "active" && guard++ < 24) {
     const actor = activeCombatant(b);
@@ -386,14 +441,21 @@ function runEnemyTurns(b: Battle): Battle {
     const targets = b.combatants.filter((c) => c.side === "ally" && alive(c));
     if (targets.length === 0) break;
     const weakest = [...targets].sort((a, x) => a.hp - x.hp)[0]!;
-    const target = Math.random() < 0.55 ? weakest : pick(targets);
-    const usable = actor.skills.map((id) => SKILLS[id]).filter((s): s is Skill => !!s && s.cost <= actor.focus);
-    if (usable.length > 0 && Math.random() < (actor.boss ? 0.7 : 0.45)) {
-      const skill = pick(usable);
-      b = { ...b, combatants: b.combatants.map((c) => (c.id === actor.id ? { ...c, focus: c.focus - skill.cost } : c)) };
-      b = resolveSkill(b, actor, skill, target.id);
+    const target = r.chance(0.55) ? weakest : pick(r, targets);
+    const usable = actor.skills
+      .map((id) => SKILLS[id])
+      .filter((s): s is Skill => !!s && s.cost <= actor.focus);
+    if (usable.length > 0 && r.chance(actor.boss ? 0.7 : 0.45)) {
+      const skill = pick(r, usable);
+      b = {
+        ...b,
+        combatants: b.combatants.map((c) =>
+          c.id === actor.id ? { ...c, focus: c.focus - skill.cost } : c,
+        ),
+      };
+      b = resolveSkill(r, b, actor, skill, target.id);
     } else {
-      const d = damage(actor, target, 1);
+      const d = damage(r, actor, target, 1);
       b = applyDamage(b, target.id, d);
       b = withLog(b, `${actor.name} hits ${target.name} for ${d}.`);
     }

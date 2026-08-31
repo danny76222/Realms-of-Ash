@@ -107,6 +107,30 @@ so Vite can hash and bundle it. That is why it lives in `src/assets/` and not
 Each image is a full copy in git history every time it is regenerated, so
 regenerate art deliberately rather than in bulk.
 
+## Determinism
+
+Every random draw in the rule files comes from `src/game/rng.ts`, seeded from
+`GameState.seed`. The same seed and the same inputs replay the same campaign.
+
+`newGame` choosing a seed is the single declared exception, and it says so
+inline. Everything else is a build failure, enforced in `eslint.config.js`.
+
+```sh
+bun run gates                  # lint + determinism
+bun run gate:determinism:prove # watch the gate fail on an injected defect
+```
+
+A guard proves nothing until it has been shown to FAIL on the defect it exists
+to catch. `scripts/determinism.ts --prove` is that proof, and `LESSONS.md`
+records the time the proof itself was wrong.
+
+## Direction and lessons
+
+- `docs/DIRECTION.md` carries numbered rulings on how the game should work. Cite
+  them rather than re-arguing them. Add to it the moment a question is answered.
+- `LESSONS.md` carries failure modes and the gates that now prevent them. Add to
+  it the moment something is rejected.
+
 ## Conventions
 
 - `@/` is the alias for `src/`.

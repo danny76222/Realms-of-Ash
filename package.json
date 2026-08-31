@@ -9,7 +9,11 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "gate:determinism": "bun scripts/determinism.ts",
+    "gate:determinism:prove": "bun scripts/determinism.ts --prove",
+    "gates": "bun run gate:lint && bun run gate:determinism",
+    "gate:lint": "node scripts/gate-lint.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

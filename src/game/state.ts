@@ -1,5 +1,6 @@
-import { BACKGROUNDS, ITEMS } from "./data";
+import { BACKGROUNDS, CLASSES, ITEMS } from "./data";
 import { SAVE_VERSION, makeUnit, pick, rnd, unitStats, xpForLevel } from "./engine";
+import { Rng, draw } from "./rng";
 import { FACTIONS, FACTION_IDS, LOCATIONS, NPCS, relKey } from "./world";
 import { timeOfDay, weatherAt } from "./weather";
 import type {
@@ -37,9 +38,19 @@ export function newGame(opts: {
   heroClass: ClassId;
   background: BackgroundId;
   portrait: string;
+  /** Replay a known campaign. Omitted in play, supplied by the gates. */
+  seed?: number;
 }): GameState {
   const bg = BACKGROUNDS[opts.background];
-  const hero = makeUnit(opts.heroName.trim() || "Nameless", opts.heroClass, 1, true);
+  // The one place a campaign is allowed to be unpredictable: choosing its seed.
+  // Everything after this is a pure function of it.
+  // The one declared exception to the determinism gate: choosing a campaign's
+  // seed is the only thing allowed to be unpredictable. Everything after this
+  // is a pure function of it.
+  // eslint-disable-next-line no-restricted-properties
+  const seed = opts.seed ?? Math.floor(Math.random() * 1e9);
+  const rng = new Rng(seed);
+  const hero = makeUnit(rng, opts.heroName.trim() || "Nameless", opts.heroClass, 1, true);
   hero.base = {
     maxHp: hero.base.maxHp + (bg.bonus.maxHp ?? 0),
     atk: hero.base.atk + (bg.bonus.atk ?? 0),
@@ -59,7 +70,9 @@ export function newGame(opts: {
         strength: FACTIONS[id].strength,
         treasury: FACTIONS[id].treasury,
         rep: id === "ironpact" ? -10 : 0,
-        territory: Object.values(LOCATIONS).filter((l) => l.faction === id).map((l) => l.id),
+        territory: Object.values(LOCATIONS)
+          .filter((l) => l.faction === id)
+          .map((l) => l.id),
         lordId: FACTIONS[id].lordId,
       },
     ]),
@@ -71,7 +84,8 @@ export function newGame(opts: {
 
   return {
     version: SAVE_VERSION,
-    seed: Math.floor(Math.random() * 1e9),
+    seed,
+    rng: rng.save(),
     heroName: hero.name,
     heroClass: opts.heroClass,
     background: opts.background,
@@ -119,7 +133,10 @@ export function flag(state: GameState, key: string): boolean | number | string |
   return state.storyFlags[key];
 }
 
-export function setFlags(state: GameState, flags: Record<string, boolean | number | string>): GameState {
+export function setFlags(
+  state: GameState,
+  flags: Record<string, boolean | number | string>,
+): GameState {
   return { ...state, storyFlags: { ...state.storyFlags, ...flags } };
 }
 
@@ -138,7 +155,12 @@ export function relationOf(state: GameState, a: FactionId, b: FactionId): Relati
   return state.relations[relKey(a, b)] ?? "peace";
 }
 
-export function setRelation(state: GameState, a: FactionId, b: FactionId, kind: RelationKind): GameState {
+export function setRelation(
+  state: GameState,
+  a: FactionId,
+  b: FactionId,
+  kind: RelationKind,
+): GameState {
   return { ...state, relations: { ...state.relations, [relKey(a, b)]: kind } };
 }
 
@@ -147,7 +169,10 @@ export function shiftAffinity(state: GameState, npcId: string, amount: number): 
   if (!n) return state;
   return {
     ...state,
-    npcs: { ...state.npcs, [npcId]: { ...n, affinity: Math.max(-100, Math.min(100, n.affinity + amount)), met: true } },
+    npcs: {
+      ...state.npcs,
+      [npcId]: { ...n, affinity: Math.max(-100, Math.min(100, n.affinity + amount)), met: true },
+    },
   };
 }
 
@@ -162,11 +187,20 @@ export function recruitNpc(state: GameState, npcId: string): GameState {
   const def = NPCS[npcId];
   if (!n || !def || n.recruited || state.party.length >= 4) return state;
   const cls: ClassId =
-    def.role === "retainer" ? "warrior" : def.role === "cleric" ? "healer" : def.role === "rogue" ? "scout" : "archer";
-  const unit = makeUnit(def.name, cls, Math.max(1, state.party[0]!.level), false);
+    def.role === "retainer"
+      ? "warrior"
+      : def.role === "cleric"
+        ? "healer"
+        : def.role === "rogue"
+          ? "scout"
+          : "archer";
+  const [unit, rng] = draw(state, (r) =>
+    makeUnit(r, def.name, cls, Math.max(1, state.party[0]!.level), false),
+  );
   unit.npcId = npcId;
   return {
     ...state,
+    rng,
     party: [...state.party, unit],
     npcs: { ...state.npcs, [npcId]: { ...n, recruited: true, met: true } },
   };
@@ -209,28 +243,41 @@ export function sleepToMorning(state: GameState): GameState {
   return { ...advanceDays(state, 1), hour: 7 };
 }
 
-export function travelTo(state: GameState, destId: string): { state: GameState; ambush: string[] | null } {
+export function travelTo(
+  state: GameState,
+  destId: string,
+): { state: GameState; ambush: string[] | null } {
   const dest = LOCATIONS[destId];
   if (!dest) return { state, ambush: null };
+  const r = Rng.restore(state.rng);
   let s: GameState = { ...state, locationId: destId };
-  s = advanceHours(s, 5 + Math.floor(Math.random() * 5));
+  s = advanceHours(s, r.int(5, 9));
   s = restParty(s, 0.12);
   const sky = weatherAt(s.seed, s.day, destId);
   const light = timeOfDay(typeof s.hour === "number" ? s.hour : 8);
-  s = pushLog(s, `Day ${s.day}, ${light.label}: the party reaches ${dest.name}. ${sky.name.toLowerCase()} on the road.`);
+  s = pushLog(
+    s,
+    `Day ${s.day}, ${light.label}: the party reaches ${dest.name}. ${sky.name.toLowerCase()} on the road.`,
+  );
 
   const escortId = s.activeSide.find((q) => q.startsWith("escort"));
   if (escortId) {
     const q = s.quests[escortId];
     if (q?.status === "active") {
       const progress = q.progress + 1;
-      s = { ...s, quests: { ...s.quests, [escortId]: { status: progress >= 2 ? "ready" : "active", progress } } };
+      s = {
+        ...s,
+        quests: {
+          ...s.quests,
+          [escortId]: { status: progress >= 2 ? "ready" : "active", progress },
+        },
+      };
     }
   }
 
   const base = dest.kind === "castle" ? 0.1 : dest.kind === "village" ? 0.24 : 0.36;
   const danger = Math.min(0.75, base * sky.ambushMul * light.ambushMul);
-  if (Math.random() < danger) {
+  if (r.chance(danger)) {
     const level = partyLevel(s);
     const pool: string[][] = [
       ["cutpurse", "cutpurse"],
@@ -239,9 +286,10 @@ export function travelTo(state: GameState, destId: string): { state: GameState; 
       ["brigand", "brigand", "road_archer"],
       ["camp_boss", "brigand", "road_archer"],
     ];
-    return { state: s, ambush: pick(pool.slice(0, Math.min(pool.length, 2 + Math.floor(level / 3)))) };
+    const ambush = pick(r, pool.slice(0, Math.min(pool.length, 2 + Math.floor(level / 3))));
+    return { state: { ...s, rng: r.save() }, ambush };
   }
-  return { state: s, ambush: null };
+  return { state: { ...s, rng: r.save() }, ambush: null };
 }
 
 /* ---------------- world clock ---------------- */
@@ -251,26 +299,34 @@ function addEvent(state: GameState, ev: WorldEvent): GameState {
 }
 
 export function simulateWorldDay(state: GameState): GameState {
-  let s = state;
-  if (Math.random() > 0.34) return s;
+  const r = Rng.restore(state.rng);
+  let s: GameState = { ...state, rng: r.save() };
+  const seal = (x: GameState): GameState => ({ ...x, rng: r.save() });
+  if (r.next() > 0.34) return seal(s);
 
-  const a = pick(FACTION_IDS);
-  const b = pick(FACTION_IDS.filter((f) => f !== a));
+  const a = pick(r, FACTION_IDS);
+  const b = pick(
+    r,
+    FACTION_IDS.filter((f) => f !== a),
+  );
   const rel = relationOf(s, a, b);
   const A = FACTIONS[a].name;
   const B = FACTIONS[b].name;
-  const roll = Math.random();
+  const roll = r.next();
 
   if (rel === "war") {
     if (roll < 0.5) {
       const loser = s.factions[a].strength >= s.factions[b].strength ? b : a;
       const winner = loser === a ? b : a;
-      const hit = Math.round(rnd(2, 6));
+      const hit = Math.round(rnd(r, 2, 6));
       s = {
         ...s,
         factions: {
           ...s.factions,
-          [loser]: { ...s.factions[loser], strength: Math.max(8, s.factions[loser].strength - hit) },
+          [loser]: {
+            ...s.factions[loser],
+            strength: Math.max(8, s.factions[loser].strength - hit),
+          },
           [winner]: { ...s.factions[winner], treasury: s.factions[winner].treasury + hit * 30 },
         },
       };
@@ -280,16 +336,22 @@ export function simulateWorldDay(state: GameState): GameState {
         text: `${FACTIONS[winner].name} raiders burn granaries in ${FACTIONS[loser].name} (-${hit} strength).`,
       });
       // territory can change hands
-      if (Math.random() < 0.22) {
+      if (r.chance(0.22)) {
         const spoils = s.factions[loser].territory.filter((t) => LOCATIONS[t]?.kind === "village");
         if (spoils.length > 1) {
-          const taken = pick(spoils);
+          const taken = pick(r, spoils);
           s = {
             ...s,
             factions: {
               ...s.factions,
-              [loser]: { ...s.factions[loser], territory: s.factions[loser].territory.filter((t) => t !== taken) },
-              [winner]: { ...s.factions[winner], territory: [...s.factions[winner].territory, taken] },
+              [loser]: {
+                ...s.factions[loser],
+                territory: s.factions[loser].territory.filter((t) => t !== taken),
+              },
+              [winner]: {
+                ...s.factions[winner],
+                territory: [...s.factions[winner].territory, taken],
+              },
             },
           };
           s = addEvent(s, {
@@ -306,26 +368,41 @@ export function simulateWorldDay(state: GameState): GameState {
   } else if (rel === "peace") {
     if (roll < 0.14) {
       s = setRelation(s, a, b, "war");
-      s = addEvent(s, { day: s.day, kind: "war", text: `${A} declares war on ${B} over an old border claim.` });
+      s = addEvent(s, {
+        day: s.day,
+        kind: "war",
+        text: `${A} declares war on ${B} over an old border claim.`,
+      });
     } else if (roll < 0.22) {
       s = setRelation(s, a, b, "alliance");
-      s = addEvent(s, { day: s.day, kind: "alliance", text: `${A} and ${B} swear an alliance at a hasty feast.` });
+      s = addEvent(s, {
+        day: s.day,
+        kind: "alliance",
+        text: `${A} and ${B} swear an alliance at a hasty feast.`,
+      });
     }
   } else if (rel === "alliance" && roll < 0.1) {
     s = setRelation(s, a, b, "peace");
-    s = addEvent(s, { day: s.day, kind: "court", text: `The alliance between ${A} and ${B} quietly lapses.` });
+    s = addEvent(s, {
+      day: s.day,
+      kind: "court",
+      text: `The alliance between ${A} and ${B} quietly lapses.`,
+    });
   }
 
   // the usurper grows if unopposed
-  if (Math.random() < 0.25) {
+  if (r.chance(0.25)) {
     const ip = s.factions.ironpact;
     const growth = s.storyFlags["draeven_checked"] ? 0 : 1;
     s = {
       ...s,
-      factions: { ...s.factions, ironpact: { ...ip, strength: Math.min(140, ip.strength + growth) } },
+      factions: {
+        ...s.factions,
+        ironpact: { ...ip, strength: Math.min(140, ip.strength + growth) },
+      },
     };
   }
-  return s;
+  return seal(s);
 }
 
 /* ---------------- battle aftermath ---------------- */
@@ -426,4 +503,24 @@ export function learnSkill(state: GameState, skillId: string): GameState {
     skillPoints: state.skillPoints - 1,
     party: state.party.map((u) => (u.isHero ? { ...u, skills: [...u.skills, skillId] } : u)),
   };
+}
+
+/**
+ * Hiring a sword in a village. This lived in LocationScreen, which meant the
+ * cost check, the party cap and the recruit's name were all rules living in a
+ * component, and the name was drawn from Math.random.
+ */
+export function hireRecruit(
+  state: GameState,
+  classId: ClassId,
+  cost: number,
+  level: number,
+): GameState {
+  if (state.gold < cost || state.party.length >= 4) return state;
+  const names = ["Wat", "Elga", "Perrin", "Sable", "Odo", "Nessa", "Rook", "Til"];
+  const [unit, rng] = draw(state, (r) => makeUnit(r, r.pick(names), classId, level, false));
+  return pushLog(
+    { ...state, rng, gold: state.gold - cost, party: [...state.party, unit] },
+    `${unit.name} the ${CLASSES[classId].name} signs on.`,
+  );
 }

@@ -1,4 +1,5 @@
 import { pick, rnd } from "./engine";
+import { Rng, draw, hashSeed } from "./rng";
 import { DUNGEON_BOSSES, DUNGEON_POOLS, ENEMIES } from "./enemies";
 import { ITEMS } from "./data";
 import { FACTIONS, LOCATIONS, NPCS } from "./world";
@@ -13,7 +14,14 @@ import {
   shiftAffinity,
   shiftRep,
 } from "./state";
-import type { FactionId, GameState, SideQuest, SideQuestKind, StoryBeat, StoryChoice } from "./types";
+import type {
+  FactionId,
+  GameState,
+  SideQuest,
+  SideQuestKind,
+  StoryBeat,
+  StoryChoice,
+} from "./types";
 
 /* ---------------- story choices ---------------- */
 
@@ -38,7 +46,12 @@ export function applyChoice(state: GameState, beat: StoryBeat, choice: StoryChoi
     beatIndex: s.beatIndex + 1,
     choiceHistory: [
       ...s.choiceHistory,
-      { beatId: beat.id, choiceId: choice.id, day: s.day, summary: `${beat.title}: ${choice.label}` },
+      {
+        beatId: beat.id,
+        choiceId: choice.id,
+        day: s.day,
+        summary: `${beat.title}: ${choice.label}`,
+      },
     ],
   };
   s = pushLog(s, `${beat.title} — ${choice.label}.`);
@@ -55,29 +68,54 @@ export function npcMemoryLine(s: GameState, npcId: string): string | null {
   const lines: string[] = [];
 
   if (npcId === "bram_carter") {
-    if (s.storyFlags["helped_bram"]) lines.push('"You put yourself between me and three Pact men. I tell that story badly, but I tell it often."');
-    if (s.storyFlags["pact_contact"]) lines.push('"I know what you took off them on the Oakhollow road. I know exactly what it bought."');
+    if (s.storyFlags["helped_bram"])
+      lines.push(
+        '"You put yourself between me and three Pact men. I tell that story badly, but I tell it often."',
+      );
+    if (s.storyFlags["pact_contact"])
+      lines.push(
+        '"I know what you took off them on the Oakhollow road. I know exactly what it bought."',
+      );
   }
   if (npcId === "lord_corvane") {
-    if (s.storyFlags["ledger_exposed"]) lines.push('"You put the ledger in my hand. I have not had a peaceful hour since, and I thank you for it."');
-    if (s.storyFlags["millford_saved"]) lines.push('"Millford eats this winter because of you. My levies know it."');
-    if (s.storyFlags["looted_millford"]) lines.push('"A reeve in Millford is missing a strongbox. I am choosing, for now, not to look too hard."');
+    if (s.storyFlags["ledger_exposed"])
+      lines.push(
+        '"You put the ledger in my hand. I have not had a peaceful hour since, and I thank you for it."',
+      );
+    if (s.storyFlags["millford_saved"])
+      lines.push('"Millford eats this winter because of you. My levies know it."');
+    if (s.storyFlags["looted_millford"])
+      lines.push(
+        '"A reeve in Millford is missing a strongbox. I am choosing, for now, not to look too hard."',
+      );
   }
   if (npcId === "lord_draeven") {
-    if (s.storyFlags["ledger_sold"]) lines.push('"You sold me a clerk\'s life at a fair price and never once haggled. I found that restful."');
-    if (s.branch === "loyalist") lines.push('"You chose the old men and their old debts. I confess I expected better arithmetic from you."');
+    if (s.storyFlags["ledger_sold"])
+      lines.push(
+        '"You sold me a clerk\'s life at a fair price and never once haggled. I found that restful."',
+      );
+    if (s.branch === "loyalist")
+      lines.push(
+        '"You chose the old men and their old debts. I confess I expected better arithmetic from you."',
+      );
   }
   if (npcId === "captain_maud") {
-    if (s.storyFlags["maud_ransomed"]) lines.push('"You sold me back by weight. I have your habits written down now."');
+    if (s.storyFlags["maud_ransomed"])
+      lines.push('"You sold me back by weight. I have your habits written down now."');
     if (st.recruited) lines.push('"Still breathing. Still your problem."');
   }
-  if (npcId === "osrick_quill" && s.storyFlags["ledger_kept"]) lines.push('"You still have my copies? Good. Use them on someone who has it coming."');
-  if (npcId === "sister_dulcie" && s.storyFlags["list_used"]) lines.push('"I mend what I can. I do not have to be glad to see you."');
+  if (npcId === "osrick_quill" && s.storyFlags["ledger_kept"])
+    lines.push('"You still have my copies? Good. Use them on someone who has it coming."');
+  if (npcId === "sister_dulcie" && s.storyFlags["list_used"])
+    lines.push('"I mend what I can. I do not have to be glad to see you."');
 
-  if (s.marriedTo === npcId) lines.push('"You could at least write when you are off getting stabbed."');
+  if (s.marriedTo === npcId)
+    lines.push('"You could at least write when you are off getting stabbed."');
   if (lines.length === 0) {
-    if (st.affinity >= 40) lines.push(`"${s.heroName}. Sit. There is wine, and there is bad news, in that order."`);
-    else if (st.affinity <= -30) lines.push('"Say what you came to say and then be somewhere else."');
+    if (st.affinity >= 40)
+      lines.push(`"${s.heroName}. Sit. There is wine, and there is bad news, in that order."`);
+    else if (st.affinity <= -30)
+      lines.push('"Say what you came to say and then be somewhere else."');
   }
   return lines[0] ?? null;
 }
@@ -96,7 +134,8 @@ const TITLES: Record<SideQuestKind, string[]> = {
 
 const DESCS: Record<SideQuestKind, string> = {
   bandit: "Kill or scatter the band camped nearby. Bring back something identifiable.",
-  delivery: "Carry the goods there without opening the crate. The crate is nailed shut for reasons.",
+  delivery:
+    "Carry the goods there without opening the crate. The crate is nailed shut for reasons.",
   escort: "Travel two legs of road with a passenger who talks the entire way.",
   investigate: "Ask questions in the right order and do not get caught asking the wrong one.",
   rescue: "Someone is being held. Get them out; getting them out politely is optional.",
@@ -138,7 +177,11 @@ export function generateSideQuests(s: GameState, locationId: string): SideQuest[
 export function acceptQuest(s: GameState, q: SideQuest): GameState {
   if (s.activeSide.includes(q.id)) return s;
   return pushLog(
-    { ...s, activeSide: [...s.activeSide, q.id], quests: { ...s.quests, [q.id]: { status: "active", progress: 0 } } },
+    {
+      ...s,
+      activeSide: [...s.activeSide, q.id],
+      quests: { ...s.quests, [q.id]: { status: "active", progress: 0 } },
+    },
     `Accepted: ${q.name}.`,
   );
 }
@@ -154,16 +197,27 @@ export function completeQuest(s: GameState, q: SideQuest): GameState {
   if (q.faction && q.repShift) out = shiftRep(out, q.faction, q.repShift);
   if (q.npcShift) out = shiftAffinity(out, q.npcShift.npcId, q.npcShift.amount);
   // side work occasionally moves the world
-  if (q.faction && Math.random() < 0.3) {
-    const rival = (Object.keys(FACTIONS) as FactionId[]).filter((f) => f !== q.faction);
-    const other = pick(rival);
-    out = shiftRep(out, other, -2);
-    out = pushLog(out, `Word of your work for ${FACTIONS[q.faction].name} reaches ${FACTIONS[other].name}, who are unimpressed.`);
+  if (q.faction) {
+    const [hit, rng] = draw(out, (r) =>
+      r.chance(0.3)
+        ? r.pick((Object.keys(FACTIONS) as FactionId[]).filter((f) => f !== q.faction))
+        : null,
+    );
+    out = { ...out, rng };
+    if (hit) {
+      const other = hit;
+      out = shiftRep(out, other, -2);
+      out = pushLog(
+        out,
+        `Word of your work for ${FACTIONS[q.faction].name} reaches ${FACTIONS[other].name}, who are unimpressed.`,
+      );
+    }
   }
   return pushLog(out, `Completed: ${q.name}. +${q.rewardGold} gold, +${q.rewardRenown} renown.`);
 }
 
 export function questEnemies(q: SideQuest, level: number): string[] {
+  const r = new Rng(hashSeed("quest-enemies", q.id, level));
   const base: Record<SideQuestKind, string[]> = {
     bandit: ["brigand", "cutpurse", "road_archer"],
     delivery: ["cutpurse", "cutpurse"],
@@ -172,7 +226,7 @@ export function questEnemies(q: SideQuest, level: number): string[] {
     rescue: ["brigand", "camp_boss"],
   };
   const list = [...base[q.kind]];
-  if (level >= 5) list.push(pick(["mercenary", "pact_pikeman", "fen_hound"]));
+  if (level >= 5) list.push(pick(r, ["mercenary", "pact_pikeman", "fen_hound"]));
   return list;
 }
 
@@ -198,6 +252,9 @@ const ROOM_NAMES = [
 ];
 
 export function generateDungeon(s: GameState, locationId: string): DungeonRoom[] {
+  // Stable for a given place, campaign and day: walking back in the same day
+  // finds the same rooms rather than rerolling the delve.
+  const r = new Rng(hashSeed("dungeon", s.seed, locationId, s.day));
   const loc = LOCATIONS[locationId];
   const pool = DUNGEON_POOLS[locationId] ?? ["cutpurse", "fen_hound"];
   const depth = loc?.depth ?? 3;
@@ -207,40 +264,58 @@ export function generateDungeon(s: GameState, locationId: string): DungeonRoom[]
   const bossHere = !!boss && (!boss.requiresFlag || !!s.storyFlags[boss.requiresFlag]);
   for (let i = 0; i < depth; i++) {
     const last = i === depth - 1;
-    const size = last ? 3 : 1 + Math.floor(Math.random() * 2) + (i > 1 ? 1 : 0);
+    const size = last ? 3 : 1 + r.int(0, 1) + (i > 1 ? 1 : 0);
     const enemies: string[] = [];
     for (let e = 0; e < size; e++) {
       const candidates = pool.filter((p) => !ENEMIES[p]?.boss);
-      enemies.push(pick(candidates.length ? candidates : pool));
+      enemies.push(pick(r, candidates.length ? candidates : pool));
     }
     if (last && bossHere && boss) enemies[0] = boss.enemyId;
     const loot: string[] = [];
-    const lootTable = ["poultice", "old_coin", "relic_shard", "strong_tonic", "luck_charm", "gambeson"];
-    if (Math.random() < 0.55 || last) loot.push(pick(lootTable));
-    if (last && Math.random() < 0.5) loot.push(pick(["arming_sword", "mail_shirt", "ranger_cloak", "war_axe"]));
+    const lootTable = [
+      "poultice",
+      "old_coin",
+      "relic_shard",
+      "strong_tonic",
+      "luck_charm",
+      "gambeson",
+    ];
+    if (r.chance(0.55) || last) loot.push(pick(r, lootTable));
+    if (last && r.chance(0.5))
+      loot.push(pick(r, ["arming_sword", "mail_shirt", "ranger_cloak", "war_axe"]));
     rooms.push({
       index: i,
-      name: last ? (bossHere && boss ? boss.chamber : "the deepest chamber") : pick(ROOM_NAMES),
+      name: last ? (bossHere && boss ? boss.chamber : "the deepest chamber") : pick(r, ROOM_NAMES),
       enemies,
       loot,
-      gold: Math.round(rnd(15, 45) * (1 + i * 0.4) * (1 + level * 0.08)),
+      gold: Math.round(rnd(r, 15, 45) * (1 + i * 0.4) * (1 + level * 0.08)),
     });
   }
 
   return rooms;
 }
 
-export function finishDungeon(s: GameState, locationId: string, gold: number, loot: string[]): GameState {
+export function finishDungeon(
+  s: GameState,
+  locationId: string,
+  gold: number,
+  loot: string[],
+): GameState {
   let out: GameState = {
     ...s,
     gold: s.gold + gold,
     renown: s.renown + 4,
-    clearedDungeons: s.clearedDungeons.includes(locationId) ? s.clearedDungeons : [...s.clearedDungeons, locationId],
+    clearedDungeons: s.clearedDungeons.includes(locationId)
+      ? s.clearedDungeons
+      : [...s.clearedDungeons, locationId],
     dungeonRuns: { ...s.dungeonRuns, [locationId]: (s.dungeonRuns[locationId] ?? 0) + 1 },
   };
   for (const l of loot) out = addItem(out, l, 1);
   const names = loot.map((l) => ITEMS[l]?.name ?? l).join(", ");
-  return pushLog(out, `Cleared ${LOCATIONS[locationId]?.name}. +${gold} gold${names ? `, ${names}` : ""}.`);
+  return pushLog(
+    out,
+    `Cleared ${LOCATIONS[locationId]?.name}. +${gold} gold${names ? `, ${names}` : ""}.`,
+  );
 }
 
 /* ---------------- marriage ---------------- */
@@ -248,10 +323,14 @@ export function finishDungeon(s: GameState, locationId: string, gold: number, lo
 export function giveGift(s: GameState, npcId: string, itemId: string): GameState {
   const item = ITEMS[itemId];
   if (!item || !s.inventory[itemId]) return s;
-  const worth = item.kind === "gift" ? Math.round(item.price / 20) + 4 : Math.round(item.price / 60) + 1;
+  const worth =
+    item.kind === "gift" ? Math.round(item.price / 20) + 4 : Math.round(item.price / 60) + 1;
   let out = addItem(s, itemId, -1);
   out = shiftAffinity(out, npcId, worth);
-  return pushLog(out, `${NPCS[npcId]?.name ?? "They"} accepts the ${item.name}. (+${worth} regard)`);
+  return pushLog(
+    out,
+    `${NPCS[npcId]?.name ?? "They"} accepts the ${item.name}. (+${worth} regard)`,
+  );
 }
 
 export function canPropose(s: GameState, npcId: string): boolean {
@@ -267,13 +346,23 @@ export function marry(s: GameState, npcId: string): GameState {
   let out: GameState = {
     ...s,
     marriedTo: npcId,
-    npcs: { ...s.npcs, [npcId]: { ...s.npcs[npcId]!, married: true, affinity: Math.min(100, s.npcs[npcId]!.affinity + 15) } },
+    npcs: {
+      ...s.npcs,
+      [npcId]: {
+        ...s.npcs[npcId]!,
+        married: true,
+        affinity: Math.min(100, s.npcs[npcId]!.affinity + 15),
+      },
+    },
     renown: s.renown + 15,
   };
   out = setFlags(out, { married: true, [`married_${npcId}`]: true });
   if (npc.faction) {
     out = shiftRep(out, npc.faction, 25);
-    out = pushLog(out, `You are wed to ${npc.name}. ${FACTIONS[npc.faction].name} now counts your fate with theirs.`);
+    out = pushLog(
+      out,
+      `You are wed to ${npc.name}. ${FACTIONS[npc.faction].name} now counts your fate with theirs.`,
+    );
   }
   return recruitNpc(out, npcId);
 }

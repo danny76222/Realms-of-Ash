@@ -13,7 +13,8 @@ import { completeQuest, finishDungeon, generateDungeon, type DungeonRoom } from 
 import { resolveEnding } from "./story";
 import type { Battle, GameState, SideQuest } from "./types";
 
-export type Screen = "title" | "create" | "map" | "location" | "battle" | "story" | "ending" | "lore";
+export type Screen =
+  "title" | "create" | "map" | "location" | "battle" | "story" | "ending" | "lore";
 
 interface DungeonRun {
   locationId: string;
@@ -38,7 +39,14 @@ interface Ctx {
   load: (g: GameState) => void;
   quit: () => void;
   goTo: (locationId: string) => void;
-  fight: (opts: { title: string; enemyIds: string[]; tag: string; canFlee?: boolean; bonusGold?: number; loot?: string[] }) => void;
+  fight: (opts: {
+    title: string;
+    enemyIds: string[];
+    tag: string;
+    canFlee?: boolean;
+    bonusGold?: number;
+    loot?: string[];
+  }) => void;
   act: (action: PlayerAction) => void;
   closeBattle: () => void;
   enterDungeon: (locationId: string) => void;
@@ -89,61 +97,67 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fight = useCallback(
-    (opts: { title: string; enemyIds: string[]; tag: string; canFlee?: boolean; bonusGold?: number; loot?: string[] }) => {
+    (opts: {
+      title: string;
+      enemyIds: string[];
+      tag: string;
+      canFlee?: boolean;
+      bonusGold?: number;
+      loot?: string[];
+    }) => {
       setGame((g) => {
         if (!g) return g;
-        setBattle(
-          createBattle({
-            state: g,
-            title: opts.title,
-            enemyIds: opts.enemyIds,
-            returnTo: g.locationId,
-            tag: opts.tag,
-            ...(opts.canFlee === undefined ? {} : { canFlee: opts.canFlee }),
-            ...(opts.bonusGold === undefined ? {} : { bonusGold: opts.bonusGold }),
-            ...(opts.loot === undefined ? {} : { loot: opts.loot }),
-          }),
-        );
+        const { battle, rng } = createBattle({
+          state: g,
+          title: opts.title,
+          enemyIds: opts.enemyIds,
+          returnTo: g.locationId,
+          tag: opts.tag,
+          ...(opts.canFlee === undefined ? {} : { canFlee: opts.canFlee }),
+          ...(opts.bonusGold === undefined ? {} : { bonusGold: opts.bonusGold }),
+          ...(opts.loot === undefined ? {} : { loot: opts.loot }),
+        });
+        setBattle(battle);
         setScreen("battle");
-        return g;
+        return { ...g, rng };
       });
     },
     [],
   );
 
-  const goTo = useCallback(
-    (locationId: string) => {
-      setGame((g) => {
-        if (!g) return g;
-        const { state, ambush } = travelTo(g, locationId);
-        if (ambush) {
-          setBattle(
-            createBattle({
-              state,
-              title: "Ambush on the road",
-              enemyIds: ambush,
-              returnTo: locationId,
-              tag: "ambush",
-            }),
-          );
-          setScreen("battle");
-        } else {
-          setScreen("location");
-        }
-        return state;
-      });
-    },
-    [],
-  );
-
-  const act = useCallback((action: PlayerAction) => {
-    setBattle((b) => {
-      if (!b || b.status !== "active") return b;
-      const { battle: nb, usedItem } = takeTurn(b, action);
-      if (usedItem) update((g) => addItem(g, usedItem, -1));
-      return nb;
+  const goTo = useCallback((locationId: string) => {
+    setGame((g) => {
+      if (!g) return g;
+      const { state, ambush } = travelTo(g, locationId);
+      if (ambush) {
+        const { battle, rng } = createBattle({
+          state,
+          title: "Ambush on the road",
+          enemyIds: ambush,
+          returnTo: locationId,
+          tag: "ambush",
+        });
+        setBattle(battle);
+        setScreen("battle");
+        return { ...state, rng };
+      } else {
+        setScreen("location");
+      }
+      return state;
     });
-  }, [update]);
+  }, []);
+
+  const act = useCallback(
+    (action: PlayerAction) => {
+      setBattle((b) => {
+        if (!b || b.status !== "active") return b;
+        const { battle: nb, usedItem } = takeTurn(b, action);
+        if (usedItem) update((g) => addItem(g, usedItem, -1));
+        return nb;
+      });
+    },
+    [update],
+  );
 
   const closeBattle = useCallback(() => {
     setBattle((b) => {
@@ -167,7 +181,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setRun((r) => {
           if (!r) return r;
           const room = r.rooms[r.index];
-          const next = { ...r, index: r.index + 1, gold: r.gold + (room?.gold ?? 0), loot: [...r.loot, ...(room?.loot ?? [])] };
+          const next = {
+            ...r,
+            index: r.index + 1,
+            gold: r.gold + (room?.gold ?? 0),
+            loot: [...r.loot, ...(room?.loot ?? [])],
+          };
           return next;
         });
       }
@@ -186,17 +205,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const rooms = generateDungeon(g, locationId);
       setRun({ locationId, rooms, index: 0, gold: 0, loot: [] });
       const first = rooms[0]!;
-      setBattle(
-        createBattle({
-          state: g,
-          title: `${first.name}`,
-          enemyIds: first.enemies,
-          returnTo: locationId,
-          tag: `dungeon:${locationId}:0`,
-        }),
-      );
+      const { battle, rng } = createBattle({
+        state: g,
+        title: `${first.name}`,
+        enemyIds: first.enemies,
+        returnTo: locationId,
+        tag: `dungeon:${locationId}:0`,
+      });
+      setBattle(battle);
       setScreen("battle");
-      return g;
+      return { ...g, rng };
     });
   }, []);
 
@@ -207,17 +225,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
       if (!room) return r;
       setGame((g) => {
         if (!g) return g;
-        setBattle(
-          createBattle({
-            state: g,
-            title: room.name,
-            enemyIds: room.enemies,
-            returnTo: r.locationId,
-            tag: `dungeon:${r.locationId}:${r.index}`,
-            canFlee: false,
-          }),
-        );
-        return g;
+        const { battle, rng } = createBattle({
+          state: g,
+          title: room.name,
+          enemyIds: room.enemies,
+          returnTo: r.locationId,
+          tag: `dungeon:${r.locationId}:${r.index}`,
+          canFlee: false,
+        });
+        setBattle(battle);
+        return { ...g, rng };
       });
       setScreen("battle");
       return r;
@@ -277,7 +294,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
       leaveDungeon,
       finishGame,
     }),
-    [game, screen, battle, run, notice, pendingQuest, start, update, load, quit, goTo, fight, act, closeBattle, enterDungeon, nextRoom, leaveDungeon, finishGame],
+    [
+      game,
+      screen,
+      battle,
+      run,
+      notice,
+      pendingQuest,
+      start,
+      update,
+      load,
+      quit,
+      goTo,
+      fight,
+      act,
+      closeBattle,
+      enterDungeon,
+      nextRoom,
+      leaveDungeon,
+      finishGame,
+    ],
   );
 
   return <GameCtx.Provider value={value}>{children}</GameCtx.Provider>;
