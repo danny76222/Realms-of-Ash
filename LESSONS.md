@@ -133,3 +133,29 @@ Two things now guard it, both from Isles:
 starvation bug waiting to happen, and it never announces itself: the feature
 works, the tests pass, and three quarters of the content silently never ships.
 Measure coverage of kinds, not volume of output.
+
+## An icon name rendered as text, four times, so now it is a gate
+
+**2026-08-31.** Ruling 11 replaced emoji with icon names. Both are strings, so
+the compiler cannot tell them apart, and every place that used to render the
+emoji as text kept compiling and started printing `house-goldmere` at the
+player.
+
+It happened in the title menu, the pause menu, the hero portrait picker, the
+muster roll, and the State of the Realm house list. Every one passed `tsc`.
+Every one was caught by looking at the screen, and the last was found only
+because someone happened to read that line while doing something else.
+
+`scripts/gate-icons.mjs` (I1) now scans JSX for a name-carrying field
+interpolated as text, which is the exact shape of the bug. Proved by injecting
+the defect and confirming the gate fires on it and not on the correct form.
+
+Two things worth carrying forward:
+
+- **A type-preserving change is the dangerous kind.** Replacing a value's
+  MEANING while keeping its TYPE buys no compiler help at all. The `IconName`
+  union caught the props and was blind to every bare `{x.banner}`.
+- **The first real run found a false positive**, a local variable called
+  `banner` holding the boss taunt line. It was renamed to `latestLine` rather
+  than the gate being loosened. Weakening a guard to fit the code is how guards
+  stop catching things.

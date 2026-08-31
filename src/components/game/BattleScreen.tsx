@@ -273,7 +273,7 @@ export function BattleScreen() {
     setPanel(null);
   };
 
-  const banner = battle.log[0];
+  const latestLine = battle.log[0];
 
   return (
     <div className={`mx-auto w-full max-w-5xl px-3 pb-8 ${shake ? "screen-shake" : ""}`}>
@@ -391,7 +391,9 @@ export function BattleScreen() {
 
         {/* ── Command box ───────────────────────────────────── */}
         <div className="command-box mt-3 border-2 border-border bg-background/80 p-3">
-          {banner ? <p className="mb-2 text-lg leading-snug text-foreground">{banner}</p> : null}
+          {latestLine ? (
+            <p className="mb-2 text-lg leading-snug text-foreground">{latestLine}</p>
+          ) : null}
 
           {battle.status === "active" ? (
             myTurn && actor ? (

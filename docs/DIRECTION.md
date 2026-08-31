@@ -216,6 +216,18 @@ Measured by `bun run gate:reputation`, which is the point. The claim
 The control runs both arms identically and must report no effect, so a reported
 effect is real rather than noise.
 
+## 15. The Ledger is built
+
+**Built 2026-08-31**, ruling 7. Menu, then The Ledger.
+
+It carries fame and honour with what each currently means in words, standing
+with all six houses as bars that read negative left of centre, every place that
+has formed a view of you, and the realm's own record of what it did about you.
+
+The ruling's warning is designed into it: the world must still show standing
+through behaviour, so every reading says what it means rather than only what it
+is, and the last section is the world's actions rather than the player's stats.
+
 ---
 
 ## Open questions, not yet ruled

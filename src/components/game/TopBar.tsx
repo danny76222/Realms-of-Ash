@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Icon } from "./icons";
+import { LedgerPanel } from "./LedgerPanel";
 import { fameTier, honourTier } from "@/game/reputation";
 import { useGame } from "@/game/store";
 import { FACTIONS, FACTION_IDS, LOCATIONS, LOCATION_IDS, NPCS } from "@/game/world";
@@ -24,7 +25,7 @@ function Plate({ icon, value, title }: { icon: string; value: string | number; t
   );
 }
 
-type Menu = null | "saves" | "world" | "journal" | "settings" | "pause";
+type Menu = null | "saves" | "world" | "journal" | "settings" | "pause" | "ledger";
 
 function MenuRow({
   icon,
@@ -251,6 +252,12 @@ export function TopBar() {
                   }}
                 />
                 <MenuRow
+                  icon="ledger"
+                  label="The Ledger"
+                  hint="Your name, the houses, and where you are known"
+                  onClick={() => setMenu("ledger")}
+                />
+                <MenuRow
                   icon={GLYPH.realm}
                   label="State of the Realm"
                   hint="Houses, wars and recent word"
@@ -357,6 +364,8 @@ export function TopBar() {
         </div>
       ) : null}
 
+      {menu === "ledger" ? <LedgerPanel game={game} onClose={() => setMenu(null)} /> : null}
+
       {menu === "world" ? (
         <Panel
           title="State of the Realm"
@@ -377,7 +386,7 @@ export function TopBar() {
                     key={id}
                     className="flex items-center gap-2 border border-border bg-background/40 px-2 py-1"
                   >
-                    <span aria-hidden>{f.banner}</span>
+                    <Icon name={f.banner} />
                     <span className="flex-1">{f.name}</span>
                     <span className="pixel-font text-[9px] text-muted-foreground">
                       str {r.strength} · coin {r.treasury} · you {r.rep > 0 ? `+${r.rep}` : r.rep}
