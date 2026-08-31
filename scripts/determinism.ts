@@ -58,7 +58,9 @@ function campaign(seed: number): string {
   return JSON.stringify({
     day: g.day,
     gold: g.gold,
-    renown: g.renown,
+    fame: g.fame,
+    honour: g.honour,
+    standing: g.standing,
     hp: g.party.map((u) => u.hp),
     ids: g.party.map((u) => u.id),
     events: g.worldEvents.map((e) => e.text),

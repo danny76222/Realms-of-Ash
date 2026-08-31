@@ -51,13 +51,29 @@ export const REPUTATION = {
     peace: 0,
   },
 
-  /** Ruling 5: houses forgive, by event and by slow decay toward neutral. */
+  /**
+   * Ruling 5: houses forgive. Note what that means, because the first version
+   * of this got it wrong and the playtest harness caught it.
+   *
+   * Forgiveness is about GRUDGES. A house letting go of an injury is the thing
+   * the ruling asked for. A house forgetting a favour at the same rate is not
+   * forgiveness, it is amnesia, and it made standing impossible to accumulate:
+   * every campaign converged on zero with every house, so a player who took
+   * Draeven's hand ended the game with the Iron Pact regarding them as a
+   * stranger.
+   *
+   * So the two directions move at different speeds. An injury heals. A debt of
+   * gratitude fades, but slowly enough that a campaign can be built on it.
+   */
   decay: {
-    /** A house lets one point go every this many days. */
-    houseEveryDays: 8,
-    /** A place forgets slower than a court does. People live there. */
-    placeEveryDays: 15,
-    /** What both decay toward. Not friendship, just the absence of a grudge. */
+    /** A house lets one point of GRUDGE go every this many days. */
+    grudgeEveryDays: 8,
+    /** A house lets one point of FAVOUR fade every this many days. Much slower. */
+    favourEveryDays: 40,
+    /** A place holds both longer than a court does. People live there. */
+    placeGrudgeEveryDays: 15,
+    placeFavourEveryDays: 60,
+    /** What decay moves toward. Not friendship, just the absence of a grudge. */
     restingPoint: 0,
     /** Below this magnitude there is nothing left to forgive. */
     floor: 1,

@@ -1,0 +1,14 @@
+{
+  // The gate scripts were outside tsconfig.json's `include`, so the checks
+  // guarding the game were themselves unchecked. One of them failed at runtime
+  // on an error tsc catches instantly (assigning a { state, levelUps } wrapper
+  // where a GameState was expected).
+  //
+  // They get their own config rather than joining the main one, because they
+  // need Node types and src/ must stay browser-only.
+  "extends": "./tsconfig.json",
+  "include": ["scripts/**/*.ts", "src/**/*.ts", "src/**/*.tsx"],
+  "compilerOptions": {
+    "types": ["vite/client", "node"]
+  }
+}

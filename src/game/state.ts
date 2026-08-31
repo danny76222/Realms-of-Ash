@@ -265,8 +265,17 @@ export function restParty(state: GameState, fraction = 1): GameState {
 }
 
 export function advanceDays(state: GameState, days: number): GameState {
-  let s = { ...state, day: state.day + days };
-  for (let i = 0; i < days; i++) s = simulateWorldDay(s);
+  // The clock advances one day at a time. It used to jump the whole span first
+  // and then simulate that many days, so every event in a multi-day span was
+  // stamped with the same date, and anything keyed on the day number (the
+  // forgiveness tick, for one) either fired on every iteration or never fired
+  // at all. Found by the playtest harness: standing never decayed across a
+  // 300 day campaign.
+  let s = state;
+  for (let i = 0; i < days; i++) {
+    s = { ...s, day: s.day + 1 };
+    s = simulateWorldDay(s);
+  }
   return s;
 }
 
@@ -357,24 +366,32 @@ function forgive(state: GameState): GameState {
   const d = REPUTATION.decay;
   let s = state;
 
-  if (s.day % d.houseEveryDays === 0) {
+  const healGrudge = s.day % d.grudgeEveryDays === 0;
+  const fadeFavour = s.day % d.favourEveryDays === 0;
+  if (healGrudge || fadeFavour) {
     const factions = { ...s.factions };
     for (const id of FACTION_IDS) {
       const rep = factions[id].rep;
       if (Math.abs(rep - d.restingPoint) < d.floor) continue;
-      factions[id] = { ...factions[id], rep: rep + (rep > d.restingPoint ? -1 : 1) };
+      const owed = rep > d.restingPoint;
+      if (owed ? !fadeFavour : !healGrudge) continue;
+      factions[id] = { ...factions[id], rep: rep + (owed ? -1 : 1) };
     }
     s = { ...s, factions };
   }
 
-  if (s.day % d.placeEveryDays === 0) {
+  const healPlace = s.day % d.placeGrudgeEveryDays === 0;
+  const fadePlace = s.day % d.placeFavourEveryDays === 0;
+  if (healPlace || fadePlace) {
     const standing = { ...s.standing };
     for (const [place, value] of Object.entries(standing)) {
       if (Math.abs(value - d.restingPoint) < d.floor) {
         delete standing[place];
         continue;
       }
-      standing[place] = value + (value > d.restingPoint ? -1 : 1);
+      const liked = value > d.restingPoint;
+      if (liked ? !fadePlace : !healPlace) continue;
+      standing[place] = value + (liked ? -1 : 1);
     }
     s = { ...s, standing };
   }

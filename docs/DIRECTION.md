@@ -228,6 +228,20 @@ The ruling's warning is designed into it: the world must still show standing
 through behaviour, so every reading says what it means rather than only what it
 is, and the last section is the world's actions rather than the player's stats.
 
+## 16. Forgiveness is asymmetric
+
+**Amends ruling 5, 2026-08-31**, on evidence from the playtest harness.
+
+Ruling 5 said houses forgive by slow decay toward neutral. Built symmetrically,
+that made favour evaporate as fast as injury, so every campaign converged on
+every house regarding the player as a stranger, and reputation stopped driving
+anything late in the game.
+
+A grudge now heals every 8 days. A favour fades every 40. A place holds both
+longer than a court does, because people live there.
+
+Ruling 5 otherwise stands. The event half of forgiveness is still unbuilt.
+
 ---
 
 ## Open questions, not yet ruled

@@ -175,3 +175,53 @@ control proved the gate catches what it was told to look for, which is a much
 weaker claim than it feels like when it prints PASS. The control now injects
 every shape the bug has actually taken in this codebase, so adding a shape means
 adding it to the control too.
+
+## The clock jumped, so nothing keyed on the day ever fired
+
+**2026-08-31.** `advanceDays` read:
+
+```ts
+let s = { ...state, day: state.day + days };
+for (let i = 0; i < days; i++) s = simulateWorldDay(s);
+```
+
+It moved the clock the whole span FIRST, then simulated that many days all
+stamped with the same final date. Every world event in a multi-day span carried
+an identical day number, and anything keyed on the day either fired on every
+iteration of the span or never fired at all, depending on one modulo.
+
+The forgiveness tick added the same day was keyed on `day % N`, so across a 300
+day campaign standing never decayed once. It looked correct in review and was
+silently inert.
+
+Found by the playtest harness, not by reading: `hammers_heir` was unreachable
+across 96 campaigns, and chasing why led here.
+
+## Forgiveness is about grudges, not amnesia
+
+**2026-08-31.** With the clock fixed, the decay from ruling 5 revealed its own
+problem: it pulled favour and injury toward zero at the same rate, so every
+campaign converged on every house regarding the player as a stranger. A player
+who took Draeven's hand ended with Iron Pact standing of -70.
+
+That is not forgiveness, it is amnesia, and it quietly contradicted ruling 1:
+reputation that always returns to zero drives nothing in the late game.
+
+Now asymmetric. A grudge heals every 8 days, a favour fades every 40. Places
+hold both longer than courts do, because people live there.
+
+**The general shape:** a mechanic that is symmetric because symmetry is tidy,
+rather than because the fiction is symmetric. Worth checking any decay, drift or
+regression-to-the-mean for the same mistake.
+
+## Two dead endings were bugs, not design
+
+**2026-08-31.** `hammers_heir` never won a single campaign out of 96. The
+temptation was to retune its authored score. Both causes turned out to be the
+bugs above, and fixing them revived it without touching a single design number.
+
+The playtest gate now fails if any beat or ending is never reached by any
+campaign, so content cannot silently die again.
+
+**Do not rebalance authored content to work around a mechanical bug.** The
+numbers would have been wrong forever afterwards.

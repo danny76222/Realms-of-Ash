@@ -12,12 +12,15 @@
     "format": "prettier --write .",
     "gate:determinism": "bun scripts/determinism.ts",
     "gate:determinism:prove": "bun scripts/determinism.ts --prove",
-    "gates": "bun run gate:lint && bun run gate:icons && bun run gate:determinism && bun run gate:reputation",
+    "gates": "bun run typecheck && bun run gate:lint && bun run gate:icons && bun run gate:determinism && bun run gate:reputation && bun run gate:playtest",
     "gate:lint": "node scripts/gate-lint.mjs",
     "gate:reputation": "bun scripts/reputation.ts",
     "gate:reputation:prove": "bun scripts/reputation.ts --prove",
     "gate:icons": "node scripts/gate-icons.mjs",
-    "gate:icons:prove": "node scripts/gate-icons.mjs --prove"
+    "gate:icons:prove": "node scripts/gate-icons.mjs --prove",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
+    "gate:playtest": "bun scripts/playtest.ts",
+    "gate:playtest:prove": "bun scripts/playtest.ts --prove"
   },
   "overrides": {
     "rolldown": "1.2.1"
