@@ -159,3 +159,19 @@ Two things worth carrying forward:
   `banner` holding the boss taunt line. It was renamed to `latestLine` rather
   than the gate being loosened. Weakening a guard to fit the code is how guards
   stop catching things.
+
+## The icon gate shipped with a hole, and the collaborator found it
+
+**2026-08-31.** The I1 gate was written the same day, with its negative control
+passing, and it still missed the most obvious shape of the bug: a bare
+`{icon}`. The field list was `banner, sprite, glyph, portrait`, and `icon` was
+not on it. The `Stat` component in `ui.tsx` was leaking a name to the screen
+the whole time the gate was reporting a pass.
+
+Danny's agent found it by reading the code, not by running the gate.
+
+**A passing gate is evidence about the shapes it knows, and nothing else.** The
+control proved the gate catches what it was told to look for, which is a much
+weaker claim than it feels like when it prints PASS. The control now injects
+every shape the bug has actually taken in this codebase, so adding a shape means
+adding it to the control too.

@@ -20,7 +20,10 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-const FIELDS = ["banner", "sprite", "glyph", "portrait"];
+// "icon" was missing from this list on the first version of the gate, and
+// Danny's agent found the one case it let through (the Stat component in
+// ui.tsx) by reading the code. A gate is only as good as its list of shapes.
+const FIELDS = ["banner", "sprite", "glyph", "portrait", "icon"];
 // `{x.banner}` or `{GLYPH.anything}` sitting where JSX renders text, meaning it
 // is not being passed as a prop (`name={...}`) and not inside a string.
 const BARE = new RegExp(String.raw`(?<![\w=])\{\s*(?:[A-Za-z_$][\w$]*\.)?(?:${FIELDS.join("|")})\s*\}`);
@@ -50,12 +53,26 @@ function scan(text, file) {
 const PROVE = process.argv.includes("--prove");
 
 if (PROVE) {
-  const defect = `      <span aria-hidden>{f.banner}</span>\n      <span>{GLYPH.gold} gold</span>\n`;
+  // Every shape the bug has actually taken in this codebase, including the
+  // bare {icon} that the first version of this gate missed.
+  const defect = [
+    "      <span aria-hidden>{f.banner}</span>",
+    "      <span>{GLYPH.gold} gold</span>",
+    "      <span aria-hidden>{icon}</span>",
+    "      <span className=\"x\">{c.sprite}</span>",
+    "      <span>{portrait}</span>",
+  ].join("\n");
   const caught = scan(defect, "injected.tsx");
-  const clean = scan(`      <Icon name={f.banner} />\n      <Icon name={GLYPH.gold} />\n`, "clean.tsx");
-  console.log(`injected defect produced ${caught.length} hits (want 2)`);
-  console.log(`the correct form produced ${clean.length} hits (want 0)`);
-  const ok = caught.length === 2 && clean.length === 0;
+  const clean = [
+    "      <Icon name={f.banner} />",
+    "      <Icon name={GLYPH.gold} />",
+    "      <Icon name={icon} />",
+    "      <Portrait glyph={npc.portrait} alt=\"x\" />",
+  ].join("\n");
+  const cleanHits = scan(clean, "clean.tsx");
+  console.log(`injected defects produced ${caught.length} hits (want 5)`);
+  console.log(`the correct forms produced ${cleanHits.length} hits (want 0)`);
+  const ok = caught.length === 5 && cleanHits.length === 0;
   console.log(
     ok
       ? "\ncontrol PASSED: the gate catches the defect and does not fire on the fix"

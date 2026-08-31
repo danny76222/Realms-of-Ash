@@ -209,7 +209,7 @@ export function Stat({ icon, value, title }: { icon: string; value: ReactNode; t
       title={title}
       className="pixel-font inline-flex items-center gap-1 text-[10px] text-foreground"
     >
-      <span aria-hidden>{icon}</span>
+      <Icon name={icon} />
       {value}
     </span>
   );
