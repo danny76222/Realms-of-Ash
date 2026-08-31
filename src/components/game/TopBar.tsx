@@ -367,7 +367,7 @@ export function TopBar() {
                     key={id}
                     className="flex items-center gap-2 border border-border bg-background/40 px-2 py-1"
                   >
-                    <span aria-hidden>{f.banner}</span>
+                    <Icon name={f.banner} />
                     <span className="flex-1">{f.name}</span>
                     <span className="pixel-font text-[9px] text-muted-foreground">
                       str {r.strength} · coin {r.treasury} · you {r.rep > 0 ? `+${r.rep}` : r.rep}
