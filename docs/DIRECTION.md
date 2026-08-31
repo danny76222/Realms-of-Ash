@@ -244,6 +244,30 @@ Ruling 5 otherwise stands. The event half of forgiveness is still unbuilt.
 
 ---
 
+## 17. Ruling 13 is superseded: it deploys now, unlisted
+
+**Amends ruling 13, 2026-08-31.** Danny wants a link he can open on his iPad.
+Ruling 13's "no preview deploy yet" is retired; everything else it said about
+_how_ to deploy, still stands and is what got built.
+
+- **Unlisted, not authenticated.** No login screen, no password. The
+  `*.workers.dev` link Cloudflare hands back is not listed or indexed
+  anywhere, so nobody finds it without being given it, but anyone holding the
+  exact URL can open it. If that stops being enough, ruling 13 already named
+  the upgrade path: Cloudflare Access in front of the same deploy.
+- **Guest saves only, exactly as ruling 13 already specified.** No Supabase
+  variables on the host. The publishable key is safe to expose, but the
+  reason to still leave it off is the one ruling 13 gave: fewer moving parts
+  on something public-ish, not safety.
+- **Danny deploys it himself, from his own machine**, not Claude from this
+  session: `bun run build` then `npx wrangler deploy --prebuilt` from
+  `.output/server`, against his own Cloudflare account. Keeps Cloudflare
+  credentials out of any cloud session entirely.
+- **Lovable's Publish button is still the wrong button.** Ruling 13's warning
+  there was never about the preview deploy question; it stands untouched.
+
+---
+
 ## Open questions, not yet ruled
 
 These are asked as they become load-bearing, not all at once.
@@ -258,7 +282,7 @@ These are asked as they become load-bearing, not all at once.
    less than fame does. Authoring those is real work and wants a view on what
    each choice means.
 3. **What does a house forgiveness event look like?** Ruling 5 gave houses a
-   slow decay toward neutral, which is built. The *event* half is not: nothing
+   slow decay toward neutral, which is built. The _event_ half is not: nothing
    yet lets you earn forgiveness deliberately.
 4. **Repo formatting.** Prettier would rewrite 50 files, most untouched by this
    work. Running it would collide with whatever Lovable generates next. Needs a
