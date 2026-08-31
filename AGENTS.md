@@ -8,3 +8,8 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Project conventions
+
+See [CLAUDE.md](./CLAUDE.md) for the stack, architecture, and the gotchas
+that matter (save versioning, Supabase RLS, asset imports, Lovable sync).
