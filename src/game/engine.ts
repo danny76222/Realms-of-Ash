@@ -169,7 +169,15 @@ export function createBattle(opts: {
     tag: opts.tag ?? null,
     canFlee: opts.canFlee ?? true,
   };
-  return { battle, rng: r.save() };
+
+  // buildOrder sorts by speed, so a fast enemy (a Cutpurse outpaces four of
+  // the five starting classes) can be first to act. The player can only act
+  // through takeTurn, which the UI only offers on an ally's turn, so a battle
+  // that opened mid-enemy-turn would soft-lock on "The enemy moves...". Run
+  // any leading enemy turns now, the same way takeTurn resolves them mid-fight.
+  const br = Rng.restore(battle.rng);
+  const opened = runEnemyTurns(br, battle);
+  return { battle: { ...opened, rng: br.save() }, rng: r.save() };
 }
 
 /* ---------------- turn resolution ---------------- */
