@@ -268,6 +268,53 @@ _how_ to deploy, still stands and is what got built.
 
 ---
 
+## 18. Side quests get a real choice, not just accept or don't
+
+**Proposed 2026-08-31, deferred to Danny and Henry.** Claude's answer, to be
+confirmed, amended, or overruled:
+
+Danny asked for dialogue that affects the storyline and quests. The main
+questline already has exactly that: `StoryBeat.choices` in `story.ts`, full
+branching, gated by reputation (ruling 9), landing in one of seven endings.
+What has none of it is `generateSideQuests` (`progress.ts`). Every side quest
+is accept-or-don't, one flat `desc` line shared by every quest of that kind,
+realm-wide. Recruitment in a tavern has a person and a name; a bandit-clearing
+job from the same village does not.
+
+Proposal, scoped small on purpose:
+
+- **One real choice at accept, not a dialogue tree.** `For coin` (today's
+  numbers, unchanged) or `As a favour` (refuse payment: `rewardGold` drops to
+  0, `npcShift` doubles, and the quest grants a small honour award it
+  currently does not). This is a fourth lever alongside gold, fame and
+  reputation, and it is the first side-quest content to move honour at all;
+  open question 2 already flagged that most non-story choices carry no
+  authored honour value.
+- **A giver line, not a quest-log line.** `desc` is one string per `kind`
+  today. It becomes two, keyed by `kind` and the choice about to be made,
+  voiced as the giver asking rather than the log describing. Still fully
+  procedural, still no per-location authoring.
+- **Not touching the main questline.** `StoryBeat`/`StoryChoice` already does
+  the bigger version of this well; ruling 3's reasoning for leaving working
+  systems alone applies here too.
+- **Measured, not just built.** The reputation gate already sweeps four
+  player temperaments; extending it to assert both choices actually get taken
+  across the sweep, and that they produce different fame/honour/gold
+  outcomes, is what makes "quests now have a real choice" a checked claim
+  rather than a description of the diff.
+
+Consequence: `SideQuest` needs a per-kind pair of giver lines instead of one,
+`acceptQuest` takes the choice and branches the reward math, and
+`completeQuest` reads back which one was taken. No new screen: this fits in
+the same accept step `LocationScreen.tsx` already has.
+
+Reasoning for staying small: Danny asked for the light-touch version over a
+full quest-giver dialogue-tree overhaul, given the size of the rest. Worth
+revisiting for a bigger pass later, closer to how ledger and reputation went
+in ruling 14 to 16, once this smaller version has actually been played.
+
+---
+
 ## Open questions, not yet ruled
 
 These are asked as they become load-bearing, not all at once.
