@@ -72,3 +72,36 @@ future diff unreadable.
 
 Only files actually being changed are formatted. Recorded as open question 5 in
 `docs/DIRECTION.md`.
+
+## The lockfile pinned 8 packages to a registry only Lovable can reach
+
+**2026-08-31.** Danny's cloud agent could not run `bun install`: it 403'd. The
+cause was `bun.lock` pinning the whole Supabase family plus `iceberg-js`, eight
+packages, to
+`europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/`, which is
+Lovable's internal Artifact Registry cache. Everything else, including the
+`@lovable.dev` packages themselves, resolved from public npm normally.
+
+The mirror is not merely firewalled off from his sandbox. It answers a request
+from anywhere outside Lovable with a 307 and an empty body, so the project could
+only be built inside Lovable's own environment. Nobody had noticed because both
+Lovable and Henry's machine had the packages cached.
+
+Fixed by deleting the vendor URL from those eight entries so bun resolves them
+from the default registry. Versions and integrity hashes were left untouched,
+and that is what makes it safe: the public npm tarball for
+`@supabase/auth-js@2.112.4` hashes to exactly the `sha512-z8Desgw...` the
+lockfile already demanded, so the bytes are identical and the URL was the only
+thing wrong.
+
+Proved by installing with `--frozen-lockfile` against a cold cache directory,
+which forces a real network fetch and refuses to rewrite the lockfile: 417
+packages, the same count as before.
+
+**Watch for it coming back.** Lovable regenerates the lockfile, so a future sync
+may reintroduce the mirror URLs. If an install fails for anyone outside Lovable,
+check this first:
+
+```sh
+grep -c "lovable-core-prod" bun.lock   # must be 0
+```
