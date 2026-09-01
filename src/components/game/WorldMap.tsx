@@ -13,6 +13,7 @@ import { FACTIONS, LOCATIONS } from "@/game/world";
 import { tintClass, timeOf, weatherOf } from "@/game/weather";
 import { Panel, PixelButton } from "./ui";
 import { DrawnMap } from "./map/DrawnMap";
+import { TerrainCanvas } from "./map/TerrainCanvas";
 import { MAP_VARS } from "./map/palette";
 import { labelFontPx, placeLabels } from "./map/labelPlacement";
 import { leftPct, topPct } from "./map/projection";
@@ -131,6 +132,11 @@ export function WorldMap() {
           className={`${tintClass(time.phase)} relative w-full overflow-hidden border-2 border-border`}
           style={{ ...MAP_VARS, aspectRatio: "16 / 10" } as CSSProperties}
         >
+          {/* The shaded ground. Everything that reads as three-dimensional is
+              painted here; the SVG above carries only what is drawn ON the
+              land: water, roads, borders, marks and names. */}
+          <TerrainCanvas className="absolute inset-0" />
+
           <DrawnMap
             ownerOf={(id) => owners.get(id) ?? null}
             currentId={game.locationId}

@@ -7,7 +7,6 @@
  */
 import { BRIDGES, COAST, ISLETS, LAKES, PEAKS, REGIONS, RIVERS, TERRITORY } from "./geography";
 import { MAP_H, MAP_W, px, py } from "./projection";
-import { COVER_INK, COVER_WASH } from "./palette";
 import { buildRoads } from "./layout";
 import { FACTIONS, LOCATIONS } from "@/game/world";
 import type { FactionId } from "@/game/types";
@@ -16,128 +15,6 @@ const ROADS = buildRoads();
 
 /* ------------------------------------------------------------------ */
 /* Texture tiles                                                       */
-/* ------------------------------------------------------------------ */
-
-function Textures() {
-  return (
-    <>
-      <pattern id="tex-forest" patternUnits="userSpaceOnUse" width="7" height="7">
-        <g
-          fill="none"
-          stroke={COVER_INK.forest}
-          strokeWidth="0.38"
-          strokeLinecap="round"
-          opacity="0.85"
-        >
-          <path d="M0.8 4.6 L2.1 1.5 L3.4 4.6 M2.1 4.6 v1" />
-          <path d="M4.2 6.4 L5.2 4 L6.2 6.4 M5.2 6.4 v0.7" />
-          <path d="M4.6 2.9 L5.4 1 L6.2 2.9" />
-        </g>
-      </pattern>
-
-      <pattern id="tex-moor" patternUnits="userSpaceOnUse" width="5" height="5">
-        <g
-          fill="none"
-          stroke={COVER_INK.moor}
-          strokeWidth="0.26"
-          strokeLinecap="round"
-          opacity="0.8"
-        >
-          <path d="M1 3.9 l0.45 -1.1 M1.45 3.9 l-0.4 -1" />
-          <path d="M3.5 1.9 l0.4 -0.95 M3.9 1.9 l-0.35 -0.9" />
-          <path d="M2.4 4.9 h0.9" />
-        </g>
-      </pattern>
-
-      <pattern
-        id="tex-downs"
-        patternUnits="userSpaceOnUse"
-        width="6"
-        height="4"
-        patternTransform="rotate(-14)"
-      >
-        <g
-          fill="none"
-          stroke={COVER_INK.downs}
-          strokeWidth="0.3"
-          strokeLinecap="round"
-          opacity="0.75"
-        >
-          <path d="M0.4 1 h2.2 M3.6 2.5 h2 M0.9 3.4 h1.7" />
-        </g>
-      </pattern>
-
-      <pattern id="tex-marsh" patternUnits="userSpaceOnUse" width="6" height="4">
-        <g
-          fill="none"
-          stroke={COVER_INK.marsh}
-          strokeWidth="0.26"
-          strokeLinecap="round"
-          opacity="0.8"
-        >
-          <path d="M0.4 1.2 h2.1 M3.4 2.4 h1.9 M1 3.4 h1.6" />
-          <path d="M1.4 1.2 v-0.7 M4.3 2.4 v-0.7" />
-        </g>
-      </pattern>
-
-      <pattern
-        id="tex-field"
-        patternUnits="userSpaceOnUse"
-        width="6"
-        height="6"
-        patternTransform="rotate(18)"
-      >
-        <g fill="none" stroke={COVER_INK.field} strokeWidth="0.22" opacity="0.7">
-          <path d="M0 0 h6 M0 3 h6 M0 0 v6 M3 0 v6" />
-        </g>
-      </pattern>
-
-      <pattern id="tex-hill" patternUnits="userSpaceOnUse" width="7" height="5">
-        <g
-          fill="none"
-          stroke={COVER_INK.hill}
-          strokeWidth="0.3"
-          strokeLinecap="round"
-          opacity="0.8"
-        >
-          <path d="M0.4 3.6 q1.5 -2.3 3 0" />
-          <path d="M3.6 4.9 q1.4 -2 2.8 0" />
-        </g>
-      </pattern>
-    </>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Relief                                                              */
-/* ------------------------------------------------------------------ */
-
-function Peaks() {
-  return (
-    <g>
-      {PEAKS.map((p, i) => (
-        <g key={`peak-${i}`}>
-          <path
-            d={`M ${p.x - p.h * 0.95} ${p.y} L ${p.x} ${p.y - p.h} L ${p.x + p.h * 0.95} ${p.y} Z`}
-            fill="var(--map-land-high)"
-            stroke="var(--map-ink)"
-            strokeWidth="0.22"
-            strokeLinejoin="round"
-            opacity="0.9"
-          />
-          <path
-            d={`M ${p.x} ${p.y - p.h} L ${p.x + p.h * 0.95} ${p.y} L ${p.x + p.h * 0.22} ${p.y} Z`}
-            fill="var(--map-ink)"
-            opacity="0.3"
-          />
-        </g>
-      ))}
-    </g>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* The map                                                             */
 /* ------------------------------------------------------------------ */
 
 export function DrawnMap({
@@ -158,8 +35,6 @@ export function DrawnMap({
       aria-hidden
     >
       <defs>
-        <Textures />
-
         <clipPath id="land-clip">
           <path d={COAST} />
         </clipPath>
@@ -187,53 +62,21 @@ export function DrawnMap({
           <stop offset="100%" stopColor="var(--map-sea-deep)" />
         </linearGradient>
 
-        <radialGradient id="vignette" cx="0.5" cy="0.5" r="0.72">
-          <stop offset="55%" stopColor="var(--map-ink)" stopOpacity="0" />
-          <stop offset="100%" stopColor="var(--map-ink)" stopOpacity="0.55" />
+        {/* The vignette was tuned against a flat drawing. Over shaded relief
+            it crushes the very thing the relief is for, so it is now a hint of
+            falloff at the corners rather than a frame. */}
+        <radialGradient id="vignette" cx="0.5" cy="0.5" r="0.8">
+          <stop offset="70%" stopColor="var(--map-ink)" stopOpacity="0" />
+          <stop offset="100%" stopColor="var(--map-ink)" stopOpacity="0.26" />
         </radialGradient>
       </defs>
 
-      {/* --- the sea, and the fathom lines that echo the coast --- */}
-      <rect x="-10" y="-10" width={MAP_W + 20} height={MAP_H + 20} fill="url(#sea-grad)" />
-      <g mask="url(#sea-mask)" fill="none" stroke="var(--map-shallow)" strokeLinejoin="round">
-        <path d={COAST} strokeWidth="2.2" opacity="0.5" />
-        <path d={COAST} strokeWidth="5" opacity="0.28" />
-        <path d={COAST} strokeWidth="9" opacity="0.16" />
-        <path d={COAST} strokeWidth="15" opacity="0.09" />
-      </g>
-
-      {/* --- land --- */}
-      <path d={COAST} fill="url(#land-grad)" />
+      {/* The ground itself is the shaded heightfield underneath (TerrainCanvas).
+          Sea, land, ground cover and peaks all come from elevation now, so the
+          flat washes, texture patterns and drawn peak symbols that used to live
+          here are gone. What remains is only what is drawn ON the land. */}
 
       <g clipPath="url(#land-clip)">
-        {/* ground cover: a wash of colour, then the texture drawn over it */}
-        {REGIONS.map((r) => (
-          <path
-            key={`wash-${r.id}`}
-            d={r.d}
-            fill={COVER_WASH[r.cover]}
-            opacity="0.34"
-            filter="url(#soft-blur)"
-          />
-        ))}
-        {REGIONS.map((r) => (
-          <path key={`tex-${r.id}`} d={r.d} fill={`url(#tex-${r.cover})`} opacity="1" />
-        ))}
-        {/* a faint edge, so ground cover reads as drawn rather than sprayed */}
-        {REGIONS.map((r) => (
-          <path
-            key={`edge-${r.id}`}
-            d={r.d}
-            fill="none"
-            stroke={COVER_INK[r.cover]}
-            strokeWidth="0.22"
-            strokeDasharray="0.9 1.4"
-            opacity="0.35"
-          />
-        ))}
-
-        <Peaks />
-
         {/* rivers, drawn twice: a soft bank, then the water */}
         {RIVERS.map((r) => (
           <path
@@ -316,23 +159,20 @@ export function DrawnMap({
         ))}
       </g>
 
-      {/* --- the coast, inked --- */}
+      {/* The coast used to be inked, which a drawn map wants and shaded relief
+          does not: a hard black line round the land reads as a sticker on the
+          sea. The shore now comes from the heightfield's own strand, and this
+          is only a faint darkening to keep the edge crisp at small sizes. */}
       <path
         d={COAST}
         fill="none"
         stroke="var(--map-ink)"
-        strokeWidth="0.55"
+        strokeWidth="0.28"
         strokeLinejoin="round"
-        opacity="0.9"
+        opacity="0.3"
       />
       {ISLETS.map((d, i) => (
-        <path
-          key={`islet-${i}`}
-          d={d}
-          fill="var(--map-land)"
-          stroke="var(--map-ink)"
-          strokeWidth="0.3"
-        />
+        <path key={`islet-${i}`} d={d} fill="none" stroke="var(--map-ink)" strokeWidth="0.3" />
       ))}
 
       {/* --- roads: the links graph, bent --- */}

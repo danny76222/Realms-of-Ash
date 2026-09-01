@@ -374,3 +374,35 @@ Measured after the fix, over 120 campaigns: builder finishes on 9,886 gold and
 91.5 honour, generous on 6,457 gold and 97.9 honour. Refusing payment costs
 real money and buys something money cannot. The gate now fails if either motive
 is never taken, or if refusing payment turns out to be free, or to pay nothing.
+
+## 19. The map is relief-shaded terrain, to Bannerlord's standard
+
+**Ruled 2026-09-01.** The drawn map from ruling 8 was a real improvement on the
+node graph, but it is a diagram with texture patterns. The bar is Mount and
+Blade II: Bannerlord's campaign map.
+
+Studying that map, almost all of the difference comes from one thing: **the
+ground is a relief-shaded heightfield, not a set of filled regions.** Ridges
+catch the light on one side and fall into shadow on the other, snow sits on the
+high ground because it is high rather than because someone drew it there, and
+colour comes from elevation instead of from an outline.
+
+Built so far (`terrain.ts`, `TerrainCanvas.tsx`):
+
+- An elevation grid for The Marches, built inside the authored coastline so the
+  shape of the realm is still someone's drawing and only the relief is computed.
+  Broad landform, ranges as ridged noise confined to the massifs, distance
+  inland, and quiet detail. Rivers carve a valley so they run in the ground
+  rather than over it.
+- Standard hillshade, light from the north-west at 46 degrees, with a weak fill
+  light so shadows read as air rather than holes, and slope darkening so cliffs
+  stay legible.
+- A naturalistic ramp: shore sand, olive lowland, dry khaki upland, scree, bare
+  rock, snow. Deliberately desaturated. Saturated green hills are what make a
+  fantasy map look like a board game.
+- Ground cover tints rather than covers, thins out below the treeline, and its
+  region polygons are blurred so they read as influence rather than as outline.
+
+Still to do before this ruling is met: settlement marks are still dark plates.
+Bannerlord uses a heraldic shield in the holder's colour with the name on a
+banner beside it, which also carries ownership at a glance.
