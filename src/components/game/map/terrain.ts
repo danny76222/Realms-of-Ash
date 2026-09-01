@@ -275,7 +275,12 @@ export function buildField(w: number, h: number): Field {
 
       // 2. the shape of the country, at the scale of a county. This is the
       //    layer that stops everything reading as one flat plate with bumps.
-      const broad = (fbm(mx * 0.018, my * 0.018, 3) - 0.42) * 0.17;
+      // Two scales of country: valleys and watersheds at the coarse scale,
+      // then hills and dales inside them. One scale alone reads as either a
+      // plate or as static.
+      const broad =
+        (fbm(mx * 0.016, my * 0.016, 3) - 0.42) * 0.2 +
+        (fbm(mx * 0.038 + 40, my * 0.038 + 40, 3) - 0.46) * 0.1;
 
       // 3. ranges: ridged noise, and ONLY on the massifs. Ridges spread over
       //    the whole map is what makes terrain read as crumpled foil.
