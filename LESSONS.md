@@ -225,3 +225,24 @@ campaign, so content cannot silently die again.
 
 **Do not rebalance authored content to work around a mechanical bug.** The
 numbers would have been wrong forever afterwards.
+
+## Flat gains made two different lives converge on the same number
+
+**2026-09-01.** Ruling 18 added a real choice at quest accept: take the coin, or
+do it as a favour for honour and regard. A fifth playtest temperament was added
+to exercise it, and the gate failed immediately: a builder and a bot that
+refuses every payment finished with *identical* honour, both pinned at 100.
+
+The choice was not broken. The axis was. Fame and honour added flat, so both
+saturated well before a campaign ended, and every player converged on the same
+maximum whatever they did to get there. A ledger that reads 100 for everyone is
+not a ledger.
+
+Gains now shrink with what you already hold (`approach`). Losses still bite in
+full, so disgrace is fast and a spotless name is slow to finish earning.
+
+**Worth generalising: a capped stat with flat gains has a saturation date, and
+after it the stat stops distinguishing anybody.** It was already visible in the
+first playtest run (builder fame 100.0, honour 98.2) and read as "the builder
+does well" rather than as a defect. It took a feature that DEPENDED on the
+difference to expose it.

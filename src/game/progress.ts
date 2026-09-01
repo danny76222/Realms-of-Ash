@@ -1,6 +1,6 @@
 import { pick, rnd } from "./engine";
 import { Rng, draw, hashSeed } from "./rng";
-import { REPUTATION, clamp } from "./reputation";
+import { REPUTATION, approach, clamp } from "./reputation";
 import { DUNGEON_BOSSES, DUNGEON_POOLS, ENEMIES } from "./enemies";
 import { ITEMS } from "./data";
 import { FACTIONS, LOCATIONS, NPCS } from "./world";
@@ -19,6 +19,7 @@ import {
   shiftStanding,
 } from "./state";
 import type {
+  QuestMotive,
   FactionId,
   GameState,
   SideQuest,
@@ -150,6 +151,38 @@ const DESCS: Record<SideQuestKind, string> = {
   rescue: "Someone is being held. Get them out; getting them out politely is optional.",
 };
 
+/**
+ * Ruling 18: what the giver says, depending on which way the player is
+ * leaning. The log line describing the job is DESCS above; this is a person
+ * asking. Still one pair per kind, so nothing needs authoring per location.
+ */
+const ASKS: Record<SideQuestKind, Record<QuestMotive, string>> = {
+  bandit: {
+    coin: "We have had a whip-round. It is not much, but it is honest, and it is yours when they are gone.",
+    favour:
+      "We cannot pay you. I am telling you that first so you can say no and we can both keep our dignity.",
+  },
+  delivery: {
+    coin: "Standard rate, half now if you want it. The crate stays shut and neither of us asks why.",
+    favour:
+      "There is no fee in this. There is a family at the other end who will know your name, if that counts.",
+  },
+  escort: {
+    coin: "Two legs of road and a fee at the end. He talks. That is factored into the fee.",
+    favour: "I cannot pay for his safety, only ask for it. He is not important to anyone but us.",
+  },
+  investigate: {
+    coin: "Discretion has a price and we have agreed to it. Ask around, come back, name your figure.",
+    favour:
+      "Take no money for this. Money leaves a record, and a record is exactly what we are trying to avoid.",
+  },
+  rescue: {
+    coin: "We have sold what we could sell. Bring them back and the purse is yours, and welcome to it.",
+    favour:
+      "We have nothing left to sell. I am asking anyway, because there is nobody else to ask.",
+  },
+};
+
 export function generateSideQuests(s: GameState, locationId: string): SideQuest[] {
   const loc = LOCATIONS[locationId];
   if (!loc) return [];
@@ -174,6 +207,7 @@ export function generateSideQuests(s: GameState, locationId: string): SideQuest[
       faction: loc.faction,
       need: kind === "escort" ? 2 : 1,
       desc: DESCS[kind],
+      ask: ASKS[kind],
       rewardGold: Math.round(60 + lvl * 28 + (n % 40)),
       rewardFame: 2 + (n % 3),
       repShift: 3 + (n % 4),
@@ -183,32 +217,51 @@ export function generateSideQuests(s: GameState, locationId: string): SideQuest[
   return out;
 }
 
-export function acceptQuest(s: GameState, q: SideQuest): GameState {
+export function acceptQuest(s: GameState, q: SideQuest, motive: QuestMotive = "coin"): GameState {
   if (s.activeSide.includes(q.id)) return s;
   return pushLog(
     {
       ...s,
       activeSide: [...s.activeSide, q.id],
-      quests: { ...s.quests, [q.id]: { status: "active", progress: 0 } },
+      quests: { ...s.quests, [q.id]: { status: "active", progress: 0, motive } },
     },
-    `Accepted: ${q.name}.`,
+    motive === "favour"
+      ? `Accepted: ${q.name}. You would not take their money.`
+      : `Accepted: ${q.name}.`,
   );
 }
 
 export function completeQuest(s: GameState, q: SideQuest): GameState {
+  // Ruling 18: the motive taken at accept decides what the work was worth.
+  // Coin pays a purse. A favour pays in name, regard and standing where it was
+  // done, and nothing else.
+  const a = REPUTATION.award;
+  const motive: QuestMotive = s.quests[q.id]?.motive ?? "coin";
+  const forFavour = motive === "favour";
+
   let out: GameState = {
     ...s,
-    gold: s.gold + q.rewardGold,
-    fame: clamp(s.fame + q.rewardFame),
-    honour: clamp(s.honour + REPUTATION.award.questHonour),
+    gold: s.gold + (forFavour ? 0 : q.rewardGold),
+    fame: approach(s.fame, q.rewardFame, REPUTATION.fame.min),
+    honour: approach(s.honour, forFavour ? a.favourHonour : a.questHonour),
     activeSide: s.activeSide.filter((id) => id !== q.id),
-    quests: { ...s.quests, [q.id]: { status: "done", progress: 0 } },
+    quests: { ...s.quests, [q.id]: { status: "done", progress: 0, motive } },
   };
   if (q.faction && q.repShift) out = shiftRep(out, q.faction, q.repShift);
   // Ruling 6: work done for a place is remembered by that place, separately
   // from what its house thinks of you.
-  out = shiftStanding(out, q.target, REPUTATION.award.questLocalStanding);
-  if (q.npcShift) out = shiftAffinity(out, q.npcShift.npcId, q.npcShift.amount);
+  out = shiftStanding(
+    out,
+    q.target,
+    a.questLocalStanding + (forFavour ? a.favourLocalStanding : 0),
+  );
+  if (q.npcShift) {
+    out = shiftAffinity(
+      out,
+      q.npcShift.npcId,
+      q.npcShift.amount * (forFavour ? a.favourAffinityMultiplier : 1),
+    );
+  }
   // side work occasionally moves the world
   if (q.faction) {
     const [hit, rng] = draw(out, (r) =>
@@ -226,7 +279,12 @@ export function completeQuest(s: GameState, q: SideQuest): GameState {
       );
     }
   }
-  return pushLog(out, `Completed: ${q.name}. +${q.rewardGold} gold, +${q.rewardFame} fame.`);
+  return pushLog(
+    out,
+    forFavour
+      ? `Completed: ${q.name}. You took no payment. +${q.rewardFame} fame, +${a.favourHonour} honour.`
+      : `Completed: ${q.name}. +${q.rewardGold} gold, +${q.rewardFame} fame.`,
+  );
 }
 
 export function questEnemies(q: SideQuest, level: number): string[] {
@@ -317,7 +375,7 @@ export function finishDungeon(
   let out: GameState = {
     ...s,
     gold: s.gold + gold,
-    fame: clamp(s.fame + 4),
+    fame: approach(s.fame, 4, REPUTATION.fame.min),
     clearedDungeons: s.clearedDungeons.includes(locationId)
       ? s.clearedDungeons
       : [...s.clearedDungeons, locationId],
@@ -367,7 +425,7 @@ export function marry(s: GameState, npcId: string): GameState {
         affinity: Math.min(100, s.npcs[npcId]!.affinity + 15),
       },
     },
-    fame: clamp(s.fame + 15),
+    fame: approach(s.fame, 15, REPUTATION.fame.min),
   };
   out = setFlags(out, { married: true, [`married_${npcId}`]: true });
   if (npc.faction) {

@@ -148,11 +148,22 @@ export interface FactionRuntime {
 
 export type QuestStatus = "locked" | "active" | "ready" | "done";
 export interface QuestState {
+  /** Which motive was taken at accept. Absent on quests from before ruling 18. */
+  motive?: QuestMotive;
   status: QuestStatus;
   progress: number;
 }
 
 export type SideQuestKind = "bandit" | "delivery" | "escort" | "investigate" | "rescue";
+
+/**
+ * Ruling 18: taking work is a choice, not a button.
+ *
+ * "coin" is the old behaviour and its numbers are unchanged. "favour" refuses
+ * payment: no gold, double the regard of the person who asked, and a little
+ * honour, which is the first side-quest content to move honour at all.
+ */
+export type QuestMotive = "coin" | "favour";
 
 export interface SideQuest {
   id: string;
@@ -164,6 +175,8 @@ export interface SideQuest {
   faction: FactionId | null;
   need: number;
   desc: string;
+  /** What the giver says, keyed by the motive the player is weighing. */
+  ask: Record<QuestMotive, string>;
   rewardGold: number;
   rewardFame: number;
   repShift?: number;

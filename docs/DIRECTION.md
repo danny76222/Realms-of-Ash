@@ -285,8 +285,9 @@ _how_ to deploy, still stands and is what got built.
 
 ## 18. Side quests get a real choice, not just accept or don't
 
-**Proposed 2026-08-31, deferred to Danny and Henry.** Claude's answer, to be
-confirmed, amended, or overruled:
+**Proposed 2026-08-31 by Danny's session. ACCEPTED and BUILT 2026-09-01.**
+Henry took it as proposed. What follows is the original proposal; the notes at
+the end record what building it actually turned up.
 
 Danny asked for dialogue that affects the storyline and quests. The main
 questline already has exactly that: `StoryBeat.choices` in `story.ts`, full
@@ -352,3 +353,24 @@ These are asked as they become load-bearing, not all at once.
 5. **Do the heraldic marks need real art eventually?** The six house devices are
    geometric SVG. They read cleanly and cost nothing, but a drawn charge per
    house would carry more of the world. Not urgent.
+
+**Built, and what it turned up.** Implemented as proposed: one choice at accept,
+per-kind giver lines voiced as a person asking, no new screen, main questline
+untouched.
+
+The measurement the proposal asked for is what made it worth doing. Extending
+the playtest with a fifth temperament, "generous", who takes work and always
+refuses payment, immediately failed: a builder and a generous player finished
+with **identical honour, both pinned at 100**. The choice was unmeasurable
+because the axis was saturated.
+
+That was not a flaw in ruling 18, it was a flaw in ruling 4's implementation.
+Fame and honour added flat, so both capped well before a campaign ended and
+every player converged on the same maximum regardless of how they got there.
+Gains now shrink as the name grows (`approach` in `reputation.ts`): climbing out
+of disgrace is fast, and the last stretch to a spotless name is slow.
+
+Measured after the fix, over 120 campaigns: builder finishes on 9,886 gold and
+91.5 honour, generous on 6,457 gold and 97.9 honour. Refusing payment costs
+real money and buys something money cannot. The gate now fails if either motive
+is never taken, or if refusing payment turns out to be free, or to pay nothing.

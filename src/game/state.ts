@@ -7,6 +7,7 @@ import {
   clamp,
   houseAttention,
   houseOfPlace,
+  approach,
   roadDanger,
   standingIn,
 } from "./reputation";
@@ -176,13 +177,17 @@ export function shiftRep(state: GameState, faction: FactionId, amount: number): 
   return { ...state, factions };
 }
 
-/** Fame never falls below zero: an infamous hero is famous, not unknown. */
+/**
+ * Fame never falls below zero: an infamous hero is famous, not unknown. Gains
+ * shrink as the name grows, so the last stretch of a great reputation is the
+ * hardest, and two different lives do not converge on the same number.
+ */
 export function shiftFame(state: GameState, amount: number): GameState {
-  return { ...state, fame: clamp(state.fame + amount, REPUTATION.fame.min, REPUTATION.max) };
+  return { ...state, fame: approach(state.fame, amount, REPUTATION.fame.min) };
 }
 
 export function shiftHonour(state: GameState, amount: number): GameState {
-  return { ...state, honour: clamp(state.honour + amount) };
+  return { ...state, honour: approach(state.honour, amount) };
 }
 
 /** Ruling 6: standing in one PLACE. This is the tier a zone will read. */

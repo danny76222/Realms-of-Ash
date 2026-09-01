@@ -112,6 +112,11 @@ export const REPUTATION = {
     questFame: 0,
     questHonour: 1,
     questLocalStanding: 6,
+    /** Ruling 18: work refused payment is worth more to a name than to a purse. */
+    favourHonour: 4,
+    favourLocalStanding: 4,
+    /** And the person who asked remembers it twice as well. */
+    favourAffinityMultiplier: 2,
     /** Killing a named person is unambiguous, so it is derived, not authored. */
     killHonour: -8,
     dungeonLocalStanding: 4,
@@ -126,6 +131,25 @@ export function clamp(
   hi: number = REPUTATION.max,
 ): number {
   return Math.max(lo, Math.min(hi, value));
+}
+
+/**
+ * A gain worth less the more you already have. Losses bite in full.
+ *
+ * Without this, fame and honour both pin to 100 well before a campaign ends,
+ * and every player converges on the same maximum regardless of how they got
+ * there. The playtest fleet found it twice: a builder and a bot that refuses
+ * all payment finished with identical honour, which made ruling 18's choice
+ * unmeasurable and, worse, meaningless.
+ *
+ * Headroom is measured against the top of the scale, so climbing out of
+ * disgrace is fast and the last stretch to a spotless name is slow. A great
+ * name should be hard to finish earning.
+ */
+export function approach(current: number, amount: number, floor: number = REPUTATION.min): number {
+  if (amount <= 0) return clamp(current + amount, floor, REPUTATION.max);
+  const headroom = Math.min(1, (REPUTATION.max - current) / REPUTATION.max);
+  return clamp(current + amount * Math.max(0, headroom), floor, REPUTATION.max);
 }
 
 /** Standing in one place. Absent means nobody there has an opinion yet. */

@@ -509,22 +509,57 @@ export function LocationScreen() {
                       <span className="min-w-0 flex-1">
                         <span className="pixel-font text-[10px] text-primary">{q.name}</span>
                         <span className="block text-sm text-muted-foreground">
-                          {q.desc} → {LOCATIONS[q.target]?.name}. {q.rewardGold} gold,{" "}
-                          {q.rewardFame} fame.
+                          {q.desc} → {LOCATIONS[q.target]?.name}.
                         </span>
                       </span>
                       {done ? (
                         <span className="pixel-font text-[9px] text-accent">done</span>
                       ) : accepted ? (
                         <span className="pixel-font text-[9px] text-muted-foreground">
-                          accepted
+                          {game.quests[q.id]?.motive === "favour"
+                            ? "taken as a favour"
+                            : "accepted"}
                         </span>
-                      ) : (
-                        <PixelButton size="sm" onClick={() => update((g) => acceptQuest(g, q))}>
-                          Take it
-                        </PixelButton>
-                      )}
+                      ) : null}
                     </div>
+
+                    {/* Ruling 18: taking work is a choice, not a button. The
+                        giver says something different depending on which way
+                        you are leaning, and the two pay in different coin. */}
+                    {!done && !accepted ? (
+                      <div className="mt-2 grid gap-1 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() => update((g) => acceptQuest(g, q, "coin"))}
+                          className="border border-border bg-background/60 px-2 py-1.5 text-left hover:border-primary"
+                        >
+                          <span className="pixel-font block text-[9px] uppercase text-primary">
+                            For coin
+                          </span>
+                          <span className="mt-0.5 block text-xs italic text-muted-foreground">
+                            {q.ask.coin}
+                          </span>
+                          <span className="pixel-font mt-1 block text-[9px] text-muted-foreground">
+                            {q.rewardGold} gold · {q.rewardFame} fame
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => update((g) => acceptQuest(g, q, "favour"))}
+                          className="border border-border bg-background/60 px-2 py-1.5 text-left hover:border-primary"
+                        >
+                          <span className="pixel-font block text-[9px] uppercase text-primary">
+                            As a favour
+                          </span>
+                          <span className="mt-0.5 block text-xs italic text-muted-foreground">
+                            {q.ask.favour}
+                          </span>
+                          <span className="pixel-font mt-1 block text-[9px] text-muted-foreground">
+                            no gold · {q.rewardFame} fame · honour · they remember
+                          </span>
+                        </button>
+                      </div>
+                    ) : null}
                   </li>
                 );
               })}

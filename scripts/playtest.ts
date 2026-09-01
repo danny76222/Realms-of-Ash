@@ -38,7 +38,7 @@ import { FACTION_IDS } from "../src/game/world";
 import { relationOf } from "../src/game/state";
 import { LOCATIONS } from "../src/game/world";
 import { Rng } from "../src/game/rng";
-import type { GameState, Battle } from "../src/game/types";
+import type { GameState, Battle, QuestMotive } from "../src/game/types";
 
 const arg = (name: string, fallback: number): number => {
   const i = process.argv.indexOf(`--${name}`);
@@ -48,8 +48,11 @@ const PROVE = process.argv.includes("--prove");
 const SEEDS = arg("seeds", 24);
 const DAYS = arg("days", 300);
 
-type Temperament = "builder" | "reckless" | "coward" | "idle";
-const TEMPERAMENTS: Temperament[] = ["builder", "reckless", "coward", "idle"];
+type Temperament = "builder" | "reckless" | "coward" | "idle" | "generous";
+// "generous" exists to exercise ruling 18's favour motive: someone who takes
+// work and refuses payment for it. Without a bot that plays that way, half the
+// new content would never be measured.
+const TEMPERAMENTS: Temperament[] = ["builder", "reckless", "coward", "idle", "generous"];
 
 interface Report {
   seed: number;
@@ -62,6 +65,8 @@ interface Report {
   wipes: number;
   battles: number;
   questsDone: number;
+  forCoin: number;
+  forFavour: number;
   beatsSeen: string[];
   branch: string | null;
   ending: string | null;
@@ -113,6 +118,8 @@ function play(seed: number, temperament: Temperament): Report {
   let wipes = 0;
   let battles = 0;
   let questsDone = 0;
+  let forCoin = 0;
+  let forFavour = 0;
   let heldQuest: ReturnType<typeof generateSideQuests>[number] | null = null;
 
   const startDay = g.day;
@@ -132,7 +139,8 @@ function play(seed: number, temperament: Temperament): Report {
     }
 
     // Work in hand.
-    if (temperament === "builder") {
+    const works = temperament === "builder" || temperament === "generous";
+    if (works) {
       if (heldQuest && g.locationId === heldQuest.target) {
         const enemies = ["brigand", "cutpurse"];
         const out = fight(g, enemies, heldQuest.name);
@@ -155,7 +163,12 @@ function play(seed: number, temperament: Temperament): Report {
         const offered = generateSideQuests(g, g.locationId);
         if (offered.length > 0) {
           heldQuest = r.pick(offered);
-          g = acceptQuest(g, heldQuest);
+          // A builder weighs it; a generous player never takes the money.
+          const motive: QuestMotive =
+            temperament === "generous" ? "favour" : r.chance(0.5) ? "favour" : "coin";
+          if (motive === "favour") forFavour++;
+          else forCoin++;
+          g = acceptQuest(g, heldQuest, motive);
         }
       }
     }
@@ -188,7 +201,7 @@ function play(seed: number, temperament: Temperament): Report {
       g = sleepToMorning(g);
     }
 
-    if (temperament === "builder" && g.party.every((u) => u.hp < u.base.maxHp * 0.5)) {
+    if (works && g.party.every((u) => u.hp < u.base.maxHp * 0.5)) {
       g = restParty(g, 1);
       g = advanceDays(g, 1);
     }
@@ -217,6 +230,8 @@ function play(seed: number, temperament: Temperament): Report {
     wipes,
     battles,
     questsDone,
+    forCoin,
+    forFavour,
     beatsSeen: [...beatsSeen],
     branch: g.branch,
     ending,
@@ -326,11 +341,45 @@ const softlocks = problems.filter((p) => p.includes("SOFT-LOCK"));
 console.log(`\n${problems.length} problems across ${reports.length} campaigns.`);
 if (problems.length) console.log([...new Set(problems)].slice(0, 25).join("\n"));
 
+/* ---------------- ruling 18: does the motive choice matter? ---------------- */
+
+const builders = reports.filter((x) => x.temperament === "builder");
+const generous = reports.filter((x) => x.temperament === "generous");
+const coinTaken = reports.reduce((a, x) => a + x.forCoin, 0);
+const favourTaken = reports.reduce((a, x) => a + x.forFavour, 0);
+const mean = (rs: Report[], f: (x: Report) => number) =>
+  rs.length ? rs.reduce((a, x) => a + f(x), 0) / rs.length : 0;
+
+console.log(`\nRuling 18, the quest motive:`);
+console.log(`  taken for coin: ${coinTaken}   taken as a favour: ${favourTaken}`);
+console.log(
+  `  builder  gold ${mean(builders, (x) => x.gold).toFixed(0).padStart(6)}  honour ${mean(builders, (x) => x.honour).toFixed(1).padStart(6)}`,
+);
+console.log(
+  `  generous gold ${mean(generous, (x) => x.gold).toFixed(0).padStart(6)}  honour ${mean(generous, (x) => x.honour).toFixed(1).padStart(6)}`,
+);
+
+const motiveProblems: string[] = [];
+if (coinTaken === 0) motiveProblems.push('the "for coin" motive was never taken');
+if (favourTaken === 0) motiveProblems.push('the "as a favour" motive was never taken');
+// A choice that changes nothing is not a choice. Refusing payment must cost
+// gold and must be worth something the purse cannot buy.
+if (mean(generous, (x) => x.gold) >= mean(builders, (x) => x.gold)) {
+  motiveProblems.push("refusing payment did not cost any gold, so the choice is free");
+}
+if (mean(generous, (x) => x.honour) <= mean(builders, (x) => x.honour)) {
+  motiveProblems.push("refusing payment bought no honour, so the choice pays nothing");
+}
+if (motiveProblems.length) {
+  console.log("\nPLAYTEST FAIL: the quest motive choice does not matter");
+  for (const m of motiveProblems) console.log(`  ${m}`);
+}
+
 // Isles G70: every rung of a ladder must be the highest rung some campaign
 // reached. Here: every ending must be the winner of at least one campaign, or
 // it is content nobody will ever see. Both endings that were unreachable
 // turned out to be bugs rather than design, so this is worth holding.
-let failures = softlocks.length;
+let failures = softlocks.length + motiveProblems.length;
 if (unseenBeats.length) {
   console.log(
     `\nPLAYTEST FAIL: ${unseenBeats.length} story beat(s) never reached: ${unseenBeats.join(", ")}`,
