@@ -462,10 +462,13 @@ export function Icon({
   name,
   className,
   title,
+  style,
 }: {
   name: IconName | string;
   className?: string;
   title?: string;
+  /** For callers that size a mark in pixels rather than in ems. */
+  style?: React.CSSProperties;
 }) {
   const body = P[name as IconName];
   if (!body) return null;
@@ -473,6 +476,7 @@ export function Icon({
     <svg
       viewBox="0 0 16 16"
       className={cn("inline-block h-[1em] w-[1em] shrink-0", className)}
+      style={style}
       fill="none"
       stroke="currentColor"
       strokeWidth="1.4"
