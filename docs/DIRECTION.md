@@ -90,14 +90,29 @@ game tells you.
 
 ## 8. The world map must become a real map
 
-**Ruled 2026-08-31.** It is a grid of nodes and lines at the moment. It needs to
-be an actual drawn map.
+**Ruled 2026-08-31. BUILT 2026-09-01.** It was a grid of nodes and lines. It is
+now a drawn regional map.
 
-Reference: Isles gates G60, G61 and G110 cover exactly this, measuring that the
-drawn coast keeps its shape and that the ground is a wash rather than a stain.
-Worth reading before starting.
+The geography is hand-authored, not generated: one closed coast path, four
+named rivers, two lakes, thirteen ground-cover regions, nineteen placed peaks.
+Procedural coastlines look procedural, and this had to look drawn. The
+settlement coordinates in `world.ts` were never moved; terrain was built around
+them.
 
-Not yet scheduled.
+Roads follow the existing `links` as bent curves rather than straight lines, and
+territory now reads from live `factions[*].territory`, so a village that changes
+hands in the war changes colour on the map.
+
+Labels are placed at render time, not by hand. Hand-picked sides were tuned at
+one width, and SVG scales while text does not, so they collided differently at
+every size. A solver now measures each name's real pixel box, tries eight sides
+at two distances, rejects anything that crosses the frame or touches a placed
+name, and hides the least important names (camps, landmarks, shrines) when
+nothing fits. Deterministic: same width, same layout.
+
+Verified independently at three frame widths (492, 828, 1096 px): zero
+overlaps, nothing clipped, every castle, village, dungeon and the player's own
+location keeps its name at all three.
 
 ## 9. Point of no return: deferred to Claude
 
